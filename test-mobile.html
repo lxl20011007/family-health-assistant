@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手机访问测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .header {
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .status-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .status-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .success {
+            color: #4CAF50;
+        }
+        
+        .info {
+            color: #2196F3;
+        }
+        
+        .steps {
+            text-align: left;
+            margin-top: 20px;
+        }
+        
+        .step {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .step-number {
+            background: white;
+            color: #667eea;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .qr-code {
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            display: inline-block;
+        }
+        
+        .qr-code img {
+            width: 200px;
+            height: 200px;
+        }
+        
+        .links {
+            margin-top: 30px;
+        }
+        
+        .link-button {
+            display: inline-block;
+            background: white;
+            color: #667eea;
+            padding: 12px 24px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            margin: 0 10px;
+            transition: transform 0.3s;
+        }
+        
+        .link-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .footer {
+            margin-top: 30px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .link-button {
+                display: block;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 手机访问测试</h1>
+            <p>家庭健康助手 - 移动端连接测试</p>
+        </div>
+        
+        <div class="status-card">
+            <div class="status-icon success">
+                <i class="fas fa-wifi"></i>
+            </div>
+            <h2>服务器运行中</h2>
+            <p>HTTP服务器已在端口 8000 启动</p>
+        </div>
+        
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div>
+                    <strong>确保手机和电脑连接同一个WiFi</strong>
+                    <p>检查WiFi网络名称是否相同</p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <div>
+                    <strong>在手机浏览器输入地址</strong>
+                    <p><code>http://192.168.31.83:8000</code></p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <div>
+                    <strong>点击下方链接快速访问</strong>
+                    <p>或扫描二维码（如果有二维码生成器）</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="links">
+            <a href="http://192.168.31.83:8000" class="link-button" target="_blank">
+                <i class="fas fa-external-link-alt"></i> 访问主应用
+            </a>
+            <a href="http://192.168.31.83:8000/index.html" class="link-button" target="_blank">
+                <i class="fas fa-home"></i> 直接打开首页
+            </a>
+        </div>
+        
+        <div class="footer">
+            <p><i class="fas fa-info-circle"></i> 如果无法访问，请检查防火墙设置或尝试其他端口</p>
+            <p>电脑IP: 192.168.31.83 | 端口: 8000</p>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+</body>
+</html>

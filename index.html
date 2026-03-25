@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家庭健康助手</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部导航 -->
+        <header class="header">
+            <h1><i class="fas fa-heartbeat"></i> 家庭健康助手</h1>
+            <div class="member-selector">
+                <select id="memberSelect">
+                    <option value="">请选择家庭成员</option>
+                </select>
+                <button id="addMemberBtn" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i> 添加成员
+                </button>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <!-- 左侧导航 -->
+            <nav class="sidebar">
+                <ul>
+                    <li class="active" data-tab="dashboard">
+                        <i class="fas fa-home"></i> 首页
+                    </li>
+                    <li data-tab="members">
+                        <i class="fas fa-users"></i> 家庭成员
+                    </li>
+                    <li data-tab="health">
+                        <i class="fas fa-heart"></i> 健康指标
+                    </li>
+                    <li data-tab="diet">
+                        <i class="fas fa-utensils"></i> 饮食管理
+                    </li>
+                    <li data-tab="exercise">
+                        <i class="fas fa-running"></i> 运动记录
+                    </li>
+                    <li data-tab="ai-consultation">
+                        <i class="fas fa-robot"></i> AI问诊
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- 右侧内容区域 -->
+            <div class="content-area">
+                <!-- 首页 -->
+                <div id="dashboard" class="tab-content active">
+                    <h2><i class="fas fa-home"></i> 欢迎使用家庭健康助手</h2>
+                    <div class="welcome-message">
+                        <p>这是一个本地运行的家庭健康管理工具，所有数据都保存在您的设备中。</p>
+                        <div class="quick-stats">
+                            <div class="stat-card">
+                                <i class="fas fa-users"></i>
+                                <h3>家庭成员</h3>
+                                <p id="memberCount">0</p>
+                            </div>
+                            <div class="stat-card">
+                                <i class="fas fa-heart"></i>
+                                <h3>健康记录</h3>
+                                <p id="healthRecordCount">0</p>
+                            </div>
+                            <div class="stat-card">
+                                <i class="fas fa-utensils"></i>
+                                <h3>饮食记录</h3>
+                                <p id="dietCount">0</p>
+                            </div>
+                            <div class="stat-card">
+                                <i class="fas fa-running"></i>
+                                <h3>运动记录</h3>
+                                <p id="exerciseCount">0</p>
+                            </div>
+                        </div>
+                        <div class="instructions">
+                            <h3>使用说明：</h3>
+                            <ol>
+                                <li>点击"添加成员"按钮创建家庭成员</li>
+                                <li>选择家庭成员后，可以记录健康指标</li>
+                                <li>记录每日饮食，管理营养摄入</li>
+                                <li>记录每日运动，保持健康生活</li>
+                                <li>所有数据都保存在您的设备中，不会上传到任何服务器</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 家庭成员管理 -->
+                <div id="members" class="tab-content">
+                    <h2><i class="fas fa-users"></i> 家庭成员管理</h2>
+                    <button id="newMemberBtn" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i> 添加新成员
+                    </button>
+                    <div class="member-list" id="memberList">
+                        <!-- 成员列表会动态生成 -->
+                        <div class="empty-state">
+                            <i class="fas fa-user-friends"></i>
+                            <p>暂无家庭成员，请点击上方按钮添加</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 健康指标记录 -->
+                <div id="health" class="tab-content">
+                    <h2><i class="fas fa-heart"></i> 健康指标记录</h2>
+                    <div class="health-actions">
+                        <button id="addHealthBtn" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> 添加记录
+                        </button>
+                        <div class="filter">
+                            <select id="healthFilter">
+                                <option value="all">全部类型</option>
+                                <option value="blood_pressure">血压</option>
+                                <option value="blood_sugar">血糖</option>
+                                <option value="heart_rate">心率</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="health-list" id="healthList">
+                        <div class="empty-state">
+                            <i class="fas fa-heartbeat"></i>
+                            <p>暂无健康记录，请先选择家庭成员并添加记录</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 饮食管理 -->
+                <div id="diet" class="tab-content">
+                    <h2><i class="fas fa-utensils"></i> 饮食记录</h2>
+                    <div class="diet-actions">
+                        <button id="addDietBtn" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> 添加记录
+                        </button>
+                        <div class="date-filter">
+                            <input type="date" id="dietDate" value="${new Date().toISOString().split('T')[0]}">
+                        </div>
+                    </div>
+                    <div class="diet-summary" id="dietSummary">
+                        <!-- 每日营养汇总将在这里显示 -->
+                    </div>
+                    <div class="diet-list" id="dietList">
+                        <div class="empty-state">
+                            <i class="fas fa-utensils"></i>
+                            <p>暂无饮食记录，请先选择家庭成员并添加记录</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 运动记录 -->
+                <div id="exercise" class="tab-content">
+                    <h2><i class="fas fa-running"></i> 运动记录</h2>
+                    <button id="addExerciseBtn" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> 添加记录
+                    </button>
+                    <div class="exercise-list" id="exerciseList">
+                        <div class="empty-state">
+                            <i class="fas fa-dumbbell"></i>
+                            <p>暂无运动记录，请先选择家庭成员并添加记录</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI问诊 -->
+                <div id="ai-consultation" class="tab-content">
+                    <h2><i class="fas fa-robot"></i> AI健康助手</h2>
+                    <div class="ai-consultation-container">
+                        <!-- API密钥配置区域 -->
+                        <div class="api-config-section">
+                            <h3><i class="fas fa-key"></i> API密钥配置</h3>
+                            <div class="api-input-group">
+                                <input type="password" id="apiKeyInput" placeholder="请输入DeepSeek API密钥" class="api-key-input">
+                                <button id="saveApiKeyBtn" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> 保存密钥
+                                </button>
+                                <button id="clearApiKeyBtn" class="btn btn-secondary">
+                                    <i class="fas fa-trash"></i> 清除密钥
+                                </button>
+                            </div>
+                            <p class="api-help-text">
+                                <i class="fas fa-info-circle"></i> 密钥仅保存在本地浏览器中，不会上传到任何服务器。
+                                <a href="https://platform.deepseek.com/api_keys" target="_blank">获取API密钥</a>
+                            </p>
+                        </div>
+
+                        <!-- 免责声明 -->
+                        <div class="disclaimer-section">
+                            <div class="disclaimer-box">
+                                <h4><i class="fas fa-exclamation-triangle"></i> 重要声明</h4>
+                                <p>AI健康助手提供的信息仅供参考，不能替代专业医疗建议。如有紧急医疗情况，请立即联系医生或拨打急救电话。</p>
+                            </div>
+                        </div>
+
+                        <!-- 聊天区域 -->
+                        <div class="chat-container">
+                            <div class="chat-header">
+                                <h3><i class="fas fa-comments"></i> 健康咨询对话</h3>
+                                <div class="chat-actions">
+                                    <button id="newChatBtn" class="btn btn-secondary">
+                                        <i class="fas fa-plus"></i> 新对话
+                                    </button>
+                                    <button id="clearChatBtn" class="btn btn-secondary">
+                                        <i class="fas fa-trash"></i> 清空对话
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="chat-messages" id="chatMessages">
+                                <div class="welcome-message">
+                                    <i class="fas fa-robot"></i>
+                                    <h4>欢迎使用AI健康助手！</h4>
+                                    <p>我是您的AI健康助手，可以为您提供：</p>
+                                    <ul>
+                                        <li>健康知识解答</li>
+                                        <li>症状初步分析</li>
+                                        <li>生活方式建议</li>
+                                        <li>用药注意事项</li>
+                                    </ul>
+                                    <p>请先配置API密钥，然后开始对话。</p>
+                                </div>
+                            </div>
+                            
+                            <div class="chat-input-area">
+                                <div class="input-wrapper">
+                                    <textarea id="chatInput" placeholder="请输入您的健康问题..." rows="3"></textarea>
+                                    <button id="sendMessageBtn" class="btn btn-primary">
+                                        <i class="fas fa-paper-plane"></i> 发送
+                                    </button>
+                                </div>
+                                <div class="input-hints">
+                                    <span class="hint">按 Enter 发送，Shift+Enter 换行</span>
+                                    <span class="hint">您可以询问：症状分析、健康建议、用药指导等</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 底部信息 -->
+        <footer class="footer">
+            <p>© 2026 家庭健康助手 | 数据本地存储，保护您的隐私</p>
+        </footer>
+    </div>
+
+    <!-- 模态框容器 -->
+    <div id="modalContainer"></div>
+
+    <!-- JavaScript文件 -->
+    <script src="diet-manager.js"></script>
+    <script src="ai-consultation.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
