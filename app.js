@@ -180,6 +180,27 @@ class FamilyHealthApp {
         records.push(record);
         this.saveDietRecords(records);
         
+        // 同步到云端
+        if (typeof supabaseClient !== 'undefined' && supabaseClient.isConnected) {
+            const cloudRecord = {
+                id: record.id,
+                member_id: record.memberId,
+                meal_type: record.mealType,
+                date: record.date,
+                food_name: record.foodName,
+                quantity: record.quantity,
+                unit: record.unit,
+                calories: record.nutrition?.calories,
+                protein: record.nutrition?.protein,
+                fat: record.nutrition?.fat,
+                carbs: record.nutrition?.carbs,
+                fiber: record.nutrition?.fiber,
+                created_at: record.createdAt,
+                updated_at: new Date().toISOString()
+            };
+            supabaseClient.pushToCloud('diet_records', cloudRecord, record.id);
+        }
+        
         // 更新统计
         this.updateStats();
         this.loadDietRecords();
@@ -2080,6 +2101,274 @@ class FamilyHealthApp {
             .mt-2 { margin-top: 0.5rem; }
         `;
         document.head.appendChild(style);
+    }
+
+    // ==================== 云同步方法 ====================
+
+    // 与云端同步数据
+    async syncWithCloud() {
+        if (typeof supabaseClient === 'undefined' || !supabaseClient.isConnected) {
+            return;
+        }
+
+        console.log('开始与云端同步数据...');
+
+        try {
+            // 1. 同步家庭成员
+            await this.syncFamilyMembers();
+            
+            // 2. 同步健康记录
+            await this.syncHealthRecords();
+            
+            // 3. 同步饮食记录
+            await this.syncDietRecords();
+            
+            // 4. 同步运动记录
+            await this.syncExerciseRecords();
+
+            console.log('云同步完成');
+        } catch (error) {
+            console.error('云同步失败:', error);
+        }
+    }
+
+    // 同步家庭成员
+    async syncFamilyMembers() {
+        const members = this.getMembers();
+        
+        for (const member of members) {
+            const cloudRecord = {
+                id: member.id,
+                name: member.name,
+                gender: member.gender,
+                birth_date: member.birthDate,
+                notes: member.notes,
+                created_at: member.createdAt,
+                updated_at: new Date().toISOString()
+            };
+
+            const result = await supabaseClient.pushToCloud('family_members', cloudRecord, member.id);
+            if (result.success) {
+                console.log(`家庭成员 ${member.name} 已同步到云端`);
+            }
+        }
+
+        // 从云端拉取最新数据
+        const cloudData = await supabaseClient.pullFromCloud('family_members');
+        if (cloudData.data) {
+            const localMembers = cloudData.data.map(m => ({
+                id: m.id,
+                name: m.name,
+                gender: m.gender,
+                birthDate: m.birth_date,
+                notes: m.notes,
+                createdAt: m.created_at
+            }));
+            
+            // 合并本地和云端数据
+            this.mergeFamilyMembers(localMembers);
+        }
+    }
+
+    // 合并家庭成员数据
+    mergeFamilyMembers(cloudMembers) {
+        const localMembers = this.getMembers();
+        const merged = [...localMembers];
+
+        for (const cloudMember of cloudMembers) {
+            const existingIndex = merged.findIndex(m => m.id === cloudMember.id);
+            if (existingIndex === -1) {
+                // 新成员，添加到本地
+                merged.push(cloudMember);
+            } else {
+                // 更新现有成员
+                merged[existingIndex] = cloudMember;
+            }
+        }
+
+        this.saveMembers(merged);
+        this.loadMembers();
+    }
+
+    // 同步健康记录
+    async syncHealthRecords() {
+        const records = this.getHealthRecords();
+        
+        for (const record of records) {
+            const cloudRecord = {
+                id: record.id,
+                member_id: record.memberId,
+                type: record.type,
+                value: record.value,
+                secondary_value: record.systolic || record.diastolic || null,
+                recorded_at: record.recordedAt ? record.recordedAt.split('T')[0] : new Date().toISOString().split('T')[0],
+                notes: record.notes,
+                created_at: record.createdAt,
+                updated_at: new Date().toISOString()
+            };
+
+            await supabaseClient.pushToCloud('health_records', cloudRecord, record.id);
+        }
+
+        // 从云端拉取最新数据
+        const cloudData = await supabaseClient.pullFromCloud('health_records');
+        if (cloudData.data) {
+            const localRecords = cloudData.data.map(r => ({
+                id: r.id,
+                memberId: r.member_id,
+                type: r.type,
+                value: r.value,
+                systolic: r.secondary_value,
+                diastolic: r.secondary_value,
+                recordedAt: r.recorded_at,
+                notes: r.notes,
+                createdAt: r.created_at
+            }));
+
+            this.mergeHealthRecords(localRecords);
+        }
+    }
+
+    // 合并健康记录
+    mergeHealthRecords(cloudRecords) {
+        const localRecords = this.getHealthRecords();
+        const merged = [...localRecords];
+
+        for (const cloudRecord of cloudRecords) {
+            const existingIndex = merged.findIndex(r => r.id === cloudRecord.id);
+            if (existingIndex === -1) {
+                merged.push(cloudRecord);
+            } else {
+                merged[existingIndex] = cloudRecord;
+            }
+        }
+
+        this.saveHealthRecords(merged);
+        this.loadHealthRecords();
+    }
+
+    // 同步饮食记录
+    async syncDietRecords() {
+        const records = this.getDietRecords();
+        
+        for (const record of records) {
+            const cloudRecord = {
+                id: record.id,
+                member_id: record.memberId,
+                meal_type: record.mealType,
+                date: record.date,
+                food_name: record.foodName,
+                quantity: record.quantity,
+                unit: record.unit,
+                calories: record.nutrition?.calories,
+                protein: record.nutrition?.protein,
+                fat: record.nutrition?.fat,
+                carbs: record.nutrition?.carbs,
+                fiber: record.nutrition?.fiber,
+                created_at: record.createdAt,
+                updated_at: new Date().toISOString()
+            };
+
+            await supabaseClient.pushToCloud('diet_records', cloudRecord, record.id);
+        }
+
+        // 从云端拉取最新数据
+        const cloudData = await supabaseClient.pullFromCloud('diet_records');
+        if (cloudData.data) {
+            const localRecords = cloudData.data.map(r => ({
+                id: r.id,
+                memberId: r.member_id,
+                mealType: r.meal_type,
+                date: r.date,
+                foodName: r.food_name,
+                quantity: r.quantity,
+                unit: r.unit,
+                nutrition: {
+                    calories: r.calories,
+                    protein: r.protein,
+                    fat: r.fat,
+                    carbs: r.carbs,
+                    fiber: r.fiber
+                },
+                createdAt: r.created_at
+            }));
+
+            this.mergeDietRecords(localRecords);
+        }
+    }
+
+    // 合并饮食记录
+    mergeDietRecords(cloudRecords) {
+        const localRecords = this.getDietRecords();
+        const merged = [...localRecords];
+
+        for (const cloudRecord of cloudRecords) {
+            const existingIndex = merged.findIndex(r => r.id === cloudRecord.id);
+            if (existingIndex === -1) {
+                merged.push(cloudRecord);
+            } else {
+                merged[existingIndex] = cloudRecord;
+            }
+        }
+
+        this.saveDietRecords(merged);
+        this.loadDietRecords();
+    }
+
+    // 同步运动记录
+    async syncExerciseRecords() {
+        const records = this.getExercises();
+        
+        for (const record of records) {
+            const cloudRecord = {
+                id: record.id,
+                member_id: record.memberId,
+                exercise_type: record.type,
+                duration_minutes: record.duration,
+                calories_burned: record.caloriesBurned,
+                recorded_at: record.exerciseDate,
+                notes: record.notes,
+                created_at: record.createdAt,
+                updated_at: new Date().toISOString()
+            };
+
+            await supabaseClient.pushToCloud('exercise_records', cloudRecord, record.id);
+        }
+
+        // 从云端拉取最新数据
+        const cloudData = await supabaseClient.pullFromCloud('exercise_records');
+        if (cloudData.data) {
+            const localRecords = cloudData.data.map(r => ({
+                id: r.id,
+                memberId: r.member_id,
+                type: r.exercise_type,
+                duration: r.duration_minutes,
+                caloriesBurned: r.calories_burned,
+                exerciseDate: r.recorded_at,
+                notes: r.notes,
+                createdAt: r.created_at
+            }));
+
+            this.mergeExerciseRecords(localRecords);
+        }
+    }
+
+    // 合并运动记录
+    mergeExerciseRecords(cloudRecords) {
+        const localRecords = this.getExercises();
+        const merged = [...localRecords];
+
+        for (const cloudRecord of cloudRecords) {
+            const existingIndex = merged.findIndex(r => r.id === cloudRecord.id);
+            if (existingIndex === -1) {
+                merged.push(cloudRecord);
+            } else {
+                merged[existingIndex] = cloudRecord;
+            }
+        }
+
+        this.saveExercises(merged);
+        this.loadExercises();
     }
 }
 
