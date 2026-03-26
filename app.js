@@ -2122,6 +2122,19 @@ class FamilyHealthApp {
         // 显示模态框
         modal.style.display = 'flex';
 
+        // 加载已保存的配置并填入输入框
+        const savedConfig = JSON.parse(localStorage.getItem('supabase_config') || '{}');
+        const urlInput = document.getElementById('supabaseUrlInput');
+        const keyInput = document.getElementById('supabaseKeyInput');
+
+        if (urlInput && savedConfig.url) {
+            urlInput.value = savedConfig.url;
+        }
+
+        if (keyInput && savedConfig.key) {
+            keyInput.value = savedConfig.key;
+        }
+
         // 绑定按钮事件
         const testBtn = document.getElementById('testConnectionBtn');
         const saveBtn = document.getElementById('saveCloudConfigBtn');
@@ -2200,7 +2213,16 @@ class FamilyHealthApp {
         const url = urlInput?.value.trim();
         const key = keyInput?.value.trim();
 
-        if (!url || !key) {
+        // 获取已保存的配置
+        const savedConfig = JSON.parse(localStorage.getItem('supabase_config') || '{}');
+
+        // 如果 URL 为空，使用已保存的 URL
+        const finalUrl = url || savedConfig.url;
+        // 如果 Key 为空，使用已保存的 Key
+        const finalKey = key || savedConfig.key;
+
+        // 检查是否有完整的配置
+        if (!finalUrl || !finalKey) {
             alert('请输入 URL 和 API Key');
             return;
         }
@@ -2211,7 +2233,7 @@ class FamilyHealthApp {
         }
 
         try {
-            const result = await supabaseClient.enableSync(url, key);
+            const result = await supabaseClient.enableSync(finalUrl, finalKey);
             
             if (result.success) {
                 alert('✅ 云同步已启用！开始同步数据...');
