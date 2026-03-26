@@ -4,6 +4,9 @@ class AIHealthAssistant {
         this.apiKey = null;
         this.conversationHistory = [];
         this.currentMember = null;
+        this.selectedFile = null;
+        this.isRecording = false;
+        this.recognition = null;
         this.init();
     }
 
@@ -82,6 +85,95 @@ class AIHealthAssistant {
         document.getElementById('memberSelect').addEventListener('change', (e) => {
             this.currentMember = e.target.value ? this.getMemberInfo(e.target.value) : null;
         });
+
+        // ===== 文件上传功能 =====
+        const uploadBtn = document.getElementById('uploadFileBtn');
+        const fileInput = document.getElementById('fileInput');
+        const filePreview = document.getElementById('filePreview');
+        const filePreviewName = document.getElementById('filePreviewName');
+        const removeFileBtn = document.getElementById('removeFileBtn');
+
+        uploadBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                this.selectedFile = file;
+                filePreviewName.textContent = file.name;
+
+                // 判断文件图标
+                let icon = 'fa-file';
+                if (file.type.startsWith('image/')) icon = 'fa-file-image';
+                else if (file.type === 'application/pdf') icon = 'fa-file-pdf';
+                else if (file.type.includes('word') || file.name.endsWith('.doc') || file.name.endsWith('.docx')) icon = 'fa-file-word';
+                else if (file.name.endsWith('.txt')) icon = 'fa-file-alt';
+                filePreview.querySelector('i').className = `fas ${icon}`;
+
+                filePreview.style.display = 'block';
+                this.showNotification(`已选择文件：${file.name}`, 'success');
+            }
+        });
+
+        removeFileBtn.addEventListener('click', () => {
+            this.selectedFile = null;
+            fileInput.value = '';
+            filePreview.style.display = 'none';
+        });
+
+        // ===== 语音输入功能 =====
+        const voiceBtn = document.getElementById('voiceInputBtn');
+        const voiceIndicator = document.getElementById('voiceIndicator');
+
+        // 检查浏览器是否支持语音识别
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            this.recognition = new SpeechRecognition();
+            this.recognition.lang = 'zh-CN';
+            this.recognition.continuous = true;
+            this.recognition.interimResults = true;
+
+            this.recognition.onresult = (event) => {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                const chatInput = document.getElementById('chatInput');
+                chatInput.value = transcript;
+            };
+
+            this.recognition.onerror = (event) => {
+                this.stopRecording();
+                if (event.error === 'not-allowed') {
+                    this.showNotification('请允许麦克风权限', 'error');
+                } else if (event.error !== 'aborted') {
+                    this.showNotification('语音识别出错：' + event.error, 'error');
+                }
+            };
+
+            this.recognition.onend = () => {
+                // 如果还在录制状态（非手动停止），自动重启
+                if (this.isRecording) {
+                    try { this.recognition.start(); } catch(e) {}
+                }
+            };
+
+            voiceBtn.addEventListener('click', () => {
+                if (this.isRecording) {
+                    this.stopRecording();
+                } else {
+                    this.startRecording();
+                }
+            });
+        } else {
+            // 浏览器不支持语音识别
+            voiceBtn.addEventListener('click', () => {
+                this.showNotification('您的浏览器不支持语音输入，请使用Chrome浏览器', 'error');
+            });
+            voiceBtn.style.opacity = '0.4';
+            voiceBtn.style.cursor = 'not-allowed';
+        }
     }
 
     // 获取成员信息
@@ -95,8 +187,68 @@ class AIHealthAssistant {
         const input = document.getElementById('chatInput');
         const message = input.value.trim();
         
+        // 处理文件
+        if (this.selectedFile) {
+            if (!this.apiKey) {
+                this.showNotification('请先配置API密钥', 'error');
+                return;
+            }
+
+            const file = this.selectedFile;
+
+            if (file.type.startsWith('image/')) {
+                // 图片：读取为 base64 发送
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const base64 = e.target.result;
+                    const fileMsg = `【上传了图片文件：${file.name}】\n这是一张图片，请帮我分析其中的内容（如检查报告、处方、体检单等）。`;
+                    
+                    this.addMessageToUI('user', fileMsg, true);
+                    input.value = '';
+                    this.clearFilePreview();
+
+                    const thinkingId = this.showThinkingIndicator();
+                    try {
+                        // 如果API支持视觉，发送图片
+                        const context = this.buildContext();
+                        const response = await this.callDeepSeekAPI(fileMsg, context);
+                        this.removeThinkingIndicator(thinkingId);
+                        this.addMessageToUI('assistant', response);
+                        this.saveToConversationHistory('user', fileMsg);
+                        this.saveToConversationHistory('assistant', response);
+                    } catch (error) {
+                        this.removeThinkingIndicator(thinkingId);
+                        this.showNotification(`发送失败: ${error.message}`, 'error');
+                    }
+                };
+                reader.readAsDataURL(file);
+            } else {
+                // 非图片文件：读取文本内容
+                const textContent = await this.readFileContent(file);
+                const fileMsg = `【上传了文件：${file.name}】\n文件内容如下：\n${textContent}\n\n请根据以上文件内容回答我的问题。`;
+
+                this.addMessageToUI('user', fileMsg, true);
+                input.value = '';
+                this.clearFilePreview();
+
+                const thinkingId = this.showThinkingIndicator();
+                try {
+                    const context = this.buildContext();
+                    const response = await this.callDeepSeekAPI(message ? `${message}\n\n${fileMsg}` : fileMsg, context);
+                    this.removeThinkingIndicator(thinkingId);
+                    this.addMessageToUI('assistant', response);
+                    this.saveToConversationHistory('user', fileMsg);
+                    this.saveToConversationHistory('assistant', response);
+                } catch (error) {
+                    this.removeThinkingIndicator(thinkingId);
+                    this.showNotification(`发送失败: ${error.message}`, 'error');
+                }
+            }
+            return;
+        }
+
         if (!message) {
-            this.showNotification('请输入消息', 'error');
+            this.showNotification('请输入消息或上传文件', 'error');
             return;
         }
 
@@ -221,7 +373,7 @@ class AIHealthAssistant {
     }
 
     // 添加消息到UI
-    addMessageToUI(role, content) {
+    addMessageToUI(role, content, isFile = false) {
         const chatMessages = document.getElementById('chatMessages');
         
         // 移除欢迎消息（如果是第一条消息）
@@ -242,11 +394,69 @@ class AIHealthAssistant {
                 <span class="message-sender">${name}</span>
                 <span class="message-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
             </div>
-            <div class="message-content">${this.formatMessageContent(content)}</div>
+            <div class="message-content ${isFile ? 'file-message' : ''}">${this.formatMessageContent(content)}</div>
         `;
 
         chatMessages.appendChild(messageDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // 读取文件内容（文本类）
+    readFileContent(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                let content = e.target.result;
+                // 截断过长内容，避免超出token限制
+                if (content.length > 8000) {
+                    content = content.substring(0, 8000) + '\n\n...（文件内容过长，仅显示前8000字符）';
+                }
+                resolve(content);
+            };
+            reader.onerror = () => reject(new Error('文件读取失败'));
+            reader.readAsText(file);
+        });
+    }
+
+    // 清除文件预览
+    clearFilePreview() {
+        this.selectedFile = null;
+        const fileInput = document.getElementById('fileInput');
+        const filePreview = document.getElementById('filePreview');
+        if (fileInput) fileInput.value = '';
+        if (filePreview) filePreview.style.display = 'none';
+    }
+
+    // 开始录音
+    startRecording() {
+        if (!this.recognition) return;
+        this.isRecording = true;
+        this.recognition.start();
+        
+        const voiceBtn = document.getElementById('voiceInputBtn');
+        const voiceIndicator = document.getElementById('voiceIndicator');
+        voiceBtn.classList.add('recording');
+        voiceBtn.title = '停止录音';
+        voiceIndicator.style.display = 'flex';
+        voiceIndicator.querySelector('span').textContent = '正在录音...点击麦克风停止';
+    }
+
+    // 停止录音
+    stopRecording() {
+        if (!this.recognition) return;
+        this.isRecording = false;
+        this.recognition.stop();
+        
+        const voiceBtn = document.getElementById('voiceInputBtn');
+        const voiceIndicator = document.getElementById('voiceIndicator');
+        voiceBtn.classList.remove('recording');
+        voiceBtn.title = '语音输入';
+        voiceIndicator.style.display = 'none';
+        
+        const chatInput = document.getElementById('chatInput');
+        if (chatInput.value.trim()) {
+            this.showNotification('语音识别完成', 'success');
+        }
     }
 
     // 格式化消息内容

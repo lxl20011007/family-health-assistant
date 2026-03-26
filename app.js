@@ -10,6 +10,13 @@ class FamilyHealthApp {
         this.bindEvents();
         this.loadMembers();
         this.updateStats();
+
+        // 设置日期默认值为今天
+        const today = new Date().toISOString().split('T')[0];
+        const dietDateEl = document.getElementById('dietDate');
+        if (dietDateEl) dietDateEl.value = today;
+        const exerciseDateEl = document.getElementById('exerciseDate');
+        if (exerciseDateEl) exerciseDateEl.value = today;
         
         // 移除用药提醒检查
         // this.checkMedicationReminders();
@@ -18,8 +25,8 @@ class FamilyHealthApp {
 
     // 绑定事件
     bindEvents() {
-        // 侧边栏导航
-        document.querySelectorAll('.sidebar li').forEach(item => {
+        // 底部导航栏
+        document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
             item.addEventListener('click', (e) => {
                 const tab = e.currentTarget.dataset.tab;
                 this.switchTab(tab);
@@ -53,12 +60,15 @@ class FamilyHealthApp {
         
         // 饮食日期筛选
         document.getElementById('dietDate').addEventListener('change', () => this.loadDietRecords());
+
+        // 运动日期筛选
+        document.getElementById('exerciseDate').addEventListener('change', () => this.loadExercises());
     }
 
     // 切换标签页
     switchTab(tabName) {
-        // 更新侧边栏激活状态
-        document.querySelectorAll('.sidebar li').forEach(item => {
+        // 更新底部导航栏激活状态
+        document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
             item.classList.remove('active');
             if (item.dataset.tab === tabName) {
                 item.classList.add('active');
@@ -335,77 +345,130 @@ class FamilyHealthApp {
         `;
     }
 
-    // 渲染饮食记录列表
+    // 渲染饮食记录列表 - 同一餐的食物分组显示
     renderDietList(records) {
         const listDiv = document.getElementById('dietList');
         if (!listDiv) return;
         
-        listDiv.innerHTML = records.map(record => {
-            const mealName = {
-                breakfast: '早餐',
-                lunch: '午餐',
-                dinner: '晚餐',
-                snack: '加餐'
-            }[record.mealType];
+        // 按餐次分组
+        const mealGroups = {};
+        records.forEach(record => {
+            const key = `${record.date}_${record.mealType}_${record.time}`;
+            if (!mealGroups[key]) {
+                mealGroups[key] = {
+                    mealType: record.mealType,
+                    time: record.time,
+                    date: record.date,
+                    notes: record.notes,
+                    totalNutrition: record.mealTotalNutrition || null,
+                    records: []
+                };
+            }
+            mealGroups[key].records.push(record);
+        });
+        
+        const mealNames = {
+            breakfast: '早餐',
+            lunch: '午餐',
+            dinner: '晚餐',
+            snack: '加餐'
+        };
+        
+        const mealIcons = {
+            breakfast: 'fa-sun',
+            lunch: 'fa-cloud-sun',
+            dinner: 'fa-moon',
+            snack: 'fa-cookie'
+        };
+        
+        // 按时间排序
+        const sortedGroups = Object.values(mealGroups).sort((a, b) => {
+            const timeA = a.time || '00:00';
+            const timeB = b.time || '00:00';
+            return timeA.localeCompare(timeB);
+        });
+        
+        listDiv.innerHTML = sortedGroups.map(group => {
+            const mealName = mealNames[group.mealType] || '加餐';
+            const mealIcon = mealIcons[group.mealType] || 'fa-utensils';
+            const time = group.time || '未记录时间';
             
-            const time = record.time || '未记录时间';
-            const nutrition = record.nutrition;
+            // 计算本餐总营养
+            let totalCal = 0, totalCarbs = 0, totalProtein = 0, totalFat = 0, totalFiber = 0;
+            const foodItems = group.records.map(record => {
+                totalCal += record.nutrition.calories;
+                totalCarbs += record.nutrition.carbs;
+                totalProtein += record.nutrition.protein;
+                totalFat += record.nutrition.fat;
+                totalFiber += record.nutrition.fiber;
+                return `
+                    <div class="meal-food-item">
+                        <span class="food-name">${record.foodName}</span>
+                        <span class="food-qty">${record.quantity}${record.unit}</span>
+                        <span class="food-cal">${record.nutrition.calories} kcal</span>
+                    </div>
+                `;
+            }).join('');
+            
+            // 收集所有记录ID用于删除
+            const allIds = group.records.map(r => `"${r.id}"`).join(',');
             
             return `
-                <div class="diet-record" data-id="${record.id}">
+                <div class="diet-record meal-group" data-ids='${allIds}'>
                     <div class="diet-record-header">
                         <div class="diet-meal-info">
-                            <span class="meal-badge ${record.mealType}">${mealName}</span>
+                            <span class="meal-badge ${group.mealType}">
+                                <i class="fas ${mealIcon}"></i> ${mealName}
+                            </span>
                             <span class="diet-time">${time}</span>
                         </div>
-                        <button class="btn-icon delete-diet" data-id="${record.id}">
+                        <button class="btn-icon delete-diet-group" data-ids='${allIds}'>
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
                     
-                    <div class="diet-food">
-                        <strong>${record.foodName}</strong>
-                        <span class="diet-quantity">${record.quantity}${record.unit}</span>
+                    <div class="meal-food-list">
+                        ${foodItems}
                     </div>
                     
-                    <div class="diet-nutrition">
-                        <div class="nutrient">
-                            <span class="nutrient-label">热量</span>
-                            <span class="nutrient-value calories">${nutrition.calories} kcal</span>
+                    <div class="diet-nutrition meal-total">
+                        <div class="nutrient highlight">
+                            <span class="nutrient-label">总热量</span>
+                            <span class="nutrient-value calories">${Math.round(totalCal)} kcal</span>
                         </div>
                         <div class="nutrient">
                             <span class="nutrient-label">碳水</span>
-                            <span class="nutrient-value carbs">${nutrition.carbs} g</span>
+                            <span class="nutrient-value">${Math.round(totalCarbs * 10) / 10} g</span>
                         </div>
                         <div class="nutrient">
                             <span class="nutrient-label">蛋白质</span>
-                            <span class="nutrient-value protein">${nutrition.protein} g</span>
+                            <span class="nutrient-value">${Math.round(totalProtein * 10) / 10} g</span>
                         </div>
                         <div class="nutrient">
                             <span class="nutrient-label">脂肪</span>
-                            <span class="nutrient-value fat">${nutrition.fat} g</span>
+                            <span class="nutrient-value">${Math.round(totalFat * 10) / 10} g</span>
                         </div>
                         <div class="nutrient">
-                            <span class="nutrient-label">膳食纤维</span>
-                            <span class="nutrient-value fiber">${nutrition.fiber} g</span>
+                            <span class="nutrient-label">纤维</span>
+                            <span class="nutrient-value">${Math.round(totalFiber * 10) / 10} g</span>
                         </div>
                     </div>
                     
-                    ${record.notes ? `
+                    ${group.notes ? `
                         <div class="diet-notes">
-                            <i class="fas fa-sticky-note"></i> ${record.notes}
+                            <i class="fas fa-sticky-note"></i> ${group.notes}
                         </div>
                     ` : ''}
                 </div>
             `;
         }).join('');
         
-        // 绑定删除按钮事件
-        listDiv.querySelectorAll('.delete-diet').forEach(btn => {
+        // 绑定删除按钮事件（整餐删除）
+        listDiv.querySelectorAll('.delete-diet-group').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const recordId = e.currentTarget.dataset.id;
-                if (confirm('确定要删除这条饮食记录吗？')) {
-                    this.deleteDietRecord(recordId);
+                const ids = JSON.parse(e.currentTarget.dataset.ids);
+                if (confirm(`确定要删除这餐（共${ids.length}条记录）的饮食记录吗？`)) {
+                    ids.forEach(id => this.deleteDietRecord(id));
                 }
             });
         });
@@ -1283,7 +1346,7 @@ class FamilyHealthApp {
     // 运动记录相关方法
     // ====================
 
-    // 加载运动记录
+    // 加载运动记录 - 按日期筛选并显示总热量
     loadExercises() {
         if (!this.currentMemberId) {
             document.getElementById('exerciseList').innerHTML = `
@@ -1295,42 +1358,98 @@ class FamilyHealthApp {
             return;
         }
 
+        const date = document.getElementById('exerciseDate') ? document.getElementById('exerciseDate').value : new Date().toISOString().split('T')[0];
         const exercises = this.getExercises(this.currentMemberId);
+        const filteredExercises = exercises.filter(ex => ex.exerciseDate === date);
+
         const exerciseList = document.getElementById('exerciseList');
         exerciseList.innerHTML = '';
 
-        if (exercises.length === 0) {
+        if (filteredExercises.length === 0) {
             exerciseList.innerHTML = `
                 <div class="empty-state">
                     <i class="fas fa-dumbbell"></i>
                     <p>暂无运动记录，点击上方按钮添加</p>
                 </div>
             `;
+            this.renderExerciseSummary([]);
             return;
         }
 
-        // 按日期倒序排序
-        exercises.sort((a, b) => new Date(b.exerciseDate) - new Date(a.exerciseDate));
+        // 按时间倒序排序
+        filteredExercises.sort((a, b) => (b.time || '00:00').localeCompare(a.time || '00:00'));
 
-        exercises.forEach(exercise => {
+        // 显示汇总
+        this.renderExerciseSummary(filteredExercises);
+
+        // 显示记录列表
+        filteredExercises.forEach(exercise => {
             const exerciseCard = this.createExerciseCard(exercise);
             exerciseList.appendChild(exerciseCard);
         });
+    }
+
+    // 渲染运动汇总
+    renderExerciseSummary(exercises) {
+        const summaryDiv = document.getElementById('exerciseSummary');
+        if (!summaryDiv) return;
+
+        if (exercises.length === 0) {
+            summaryDiv.innerHTML = '';
+            return;
+        }
+
+        let totalCalories = 0;
+        let totalDuration = 0;
+
+        exercises.forEach(ex => {
+            totalCalories += ex.caloriesBurned || 0;
+            totalDuration += ex.duration || 0;
+        });
+
+        const hours = Math.floor(totalDuration / 60);
+        const minutes = totalDuration % 60;
+        const durationText = hours > 0
+            ? `${hours}小时${minutes}分钟`
+            : `${minutes}分钟`;
+
+        summaryDiv.innerHTML = `
+            <div class="exercise-summary-card">
+                <h3><i class="fas fa-chart-bar"></i> 今日运动汇总</h3>
+                <div class="summary-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">总运动时长</div>
+                        <div class="stat-value">${durationText}</div>
+                    </div>
+                    <div class="stat-item highlight">
+                        <div class="stat-label">总热量消耗</div>
+                        <div class="stat-value">${totalCalories} kcal</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">运动项目数</div>
+                        <div class="stat-value">${exercises.length}</div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     // 创建运动记录卡片
     createExerciseCard(exercise) {
         const card = document.createElement('div');
         card.className = 'card exercise-item';
-        
-        const duration = exercise.duration >= 60 
+
+        const duration = exercise.duration >= 60
             ? `${Math.floor(exercise.duration / 60)}小时${exercise.duration % 60}分钟`
             : `${exercise.duration}分钟`;
+
+        const exerciseData = (typeof EXERCISE_DATABASE !== 'undefined') ? (EXERCISE_DATABASE[exercise.type] || { icon: 'fa-dumbbell', name: exercise.type }) : { icon: 'fa-dumbbell', name: exercise.type };
+        const icon = exerciseData.icon || 'fa-dumbbell';
 
         card.innerHTML = `
             <div class="card-header">
                 <div class="card-title">
-                    <i class="fas fa-running"></i> ${exercise.type}
+                    <i class="fas ${icon}"></i> ${exercise.type}
                 </div>
                 <div class="card-actions">
                     <button class="btn btn-danger btn-sm delete-exercise" data-id="${exercise.id}">
@@ -1339,11 +1458,21 @@ class FamilyHealthApp {
                 </div>
             </div>
             <div class="card-body">
-                <div class="duration">${duration}</div>
-                ${exercise.notes ? `<p class="mt-2">备注：${exercise.notes}</p>` : ''}
+                <div class="exercise-info">
+                    <div class="info-item">
+                        <span class="info-label"><i class="fas fa-hourglass-end"></i> 运动时长</span>
+                        <span class="info-value">${duration}</span>
+                    </div>
+                    <div class="info-item highlight">
+                        <span class="info-label"><i class="fas fa-fire"></i> 热量消耗</span>
+                        <span class="info-value">${exercise.caloriesBurned} kcal</span>
+                    </div>
+                </div>
+                ${exercise.notes ? `<p class="mt-2"><i class="fas fa-sticky-note"></i> ${exercise.notes}</p>` : ''}
             </div>
             <div class="card-footer">
-                <span>运动日期：${new Date(exercise.exerciseDate).toLocaleDateString()}</span>
+                <span><i class="fas fa-calendar"></i> ${new Date(exercise.exerciseDate).toLocaleDateString()}</span>
+                ${exercise.time ? `<span><i class="fas fa-clock"></i> ${exercise.time}</span>` : ''}
             </div>
         `;
 
@@ -1355,103 +1484,140 @@ class FamilyHealthApp {
         return card;
     }
 
-    // 显示添加饮食记录模态框
+    // 显示添加饮食记录模态框 - 支持多食物和一键选择餐次
     showAddDietModal() {
         if (!this.currentMemberId) {
             alert('请先选择家庭成员');
             return;
         }
         
+        // 获取当前时间，自动判断餐次
+        const now = new Date();
+        const currentHour = now.getHours();
+        let defaultMealType = 'snack';
+        if (currentHour >= 5 && currentHour < 10) {
+            defaultMealType = 'breakfast';
+        } else if (currentHour >= 10 && currentHour < 14) {
+            defaultMealType = 'lunch';
+        } else if (currentHour >= 17 && currentHour < 21) {
+            defaultMealType = 'dinner';
+        } else {
+            defaultMealType = 'snack';
+        }
+        
         // 获取食物列表和单位列表
         const foodList = getFoodList ? getFoodList() : ['米饭', '面条', '鸡蛋', '鸡胸肉', '青菜', '苹果'];
         const unitList = getUnitList ? getUnitList() : ['g', 'ml', '个', '碗'];
-        const mealTypeList = getMealTypeList ? getMealTypeList() : [
-            { value: 'breakfast', label: '早餐' },
-            { value: 'lunch', label: '午餐' },
-            { value: 'dinner', label: '晚餐' },
-            { value: 'snack', label: '加餐' }
-        ];
         
         const foodOptions = foodList.map(food => `<option value="${food}">${food}</option>`).join('');
         const unitOptions = unitList.map(unit => `<option value="${unit}">${unit}</option>`).join('');
-        const mealOptions = mealTypeList.map(meal => `<option value="${meal.value}">${meal.label}</option>`).join('');
         
         const modalHTML = `
             <div class="modal-overlay active">
-                <div class="modal">
+                <div class="modal diet-modal">
                     <div class="modal-header">
                         <h3><i class="fas fa-utensils"></i> 添加饮食记录</h3>
                         <button class="modal-close">&times;</button>
                     </div>
                     <div class="modal-body">
-                        <form id="dietForm">
-                            <div class="form-group">
-                                <label for="dietMealType"><i class="fas fa-clock"></i> 餐次</label>
-                                <select id="dietMealType" class="form-control" required>
-                                    ${mealOptions}
-                                </select>
+                        <!-- 餐次快速选择按钮 -->
+                        <div class="meal-type-selector">
+                            <label><i class="fas fa-clock"></i> 选择餐次</label>
+                            <div class="meal-buttons">
+                                <button type="button" class="meal-btn ${defaultMealType === 'breakfast' ? 'active' : ''}" data-type="breakfast">
+                                    <i class="fas fa-sun"></i> 早餐
+                                </button>
+                                <button type="button" class="meal-btn ${defaultMealType === 'lunch' ? 'active' : ''}" data-type="lunch">
+                                    <i class="fas fa-cloud-sun"></i> 午餐
+                                </button>
+                                <button type="button" class="meal-btn ${defaultMealType === 'dinner' ? 'active' : ''}" data-type="dinner">
+                                    <i class="fas fa-moon"></i> 晚餐
+                                </button>
+                                <button type="button" class="meal-btn ${defaultMealType === 'snack' ? 'active' : ''}" data-type="snack">
+                                    <i class="fas fa-cookie"></i> 加餐
+                                </button>
                             </div>
-                            
-                            <div class="form-group">
-                                <label for="dietTime"><i class="fas fa-clock"></i> 时间</label>
-                                <input type="time" id="dietTime" class="form-control" value="${new Date().toTimeString().slice(0,5)}" required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="dietFood"><i class="fas fa-apple-alt"></i> 食物名称</label>
-                                <select id="dietFood" class="form-control" required>
-                                    <option value="">请选择食物</option>
-                                    ${foodOptions}
-                                </select>
-                                <small class="form-text">或输入自定义食物名称</small>
-                                <input type="text" id="dietCustomFood" class="form-control mt-1" placeholder="输入自定义食物名称">
-                            </div>
-                            
-                            <div class="form-row">
-                                <div class="form-group col-6">
-                                    <label for="dietQuantity"><i class="fas fa-weight"></i> 数量</label>
-                                    <input type="number" id="dietQuantity" class="form-control" value="100" min="1" step="1" required>
+                            <input type="hidden" id="dietMealType" value="${defaultMealType}">
+                        </div>
+                        
+                        <!-- 食物列表 -->
+                        <div class="food-list-container" id="foodListContainer">
+                            <!-- 初始一条食物记录 -->
+                            <div class="food-item" data-index="0">
+                                <div class="food-item-header">
+                                    <span class="food-item-title">食物 1</span>
+                                    <button type="button" class="btn-remove-food" style="display:none;"><i class="fas fa-times"></i></button>
                                 </div>
-                                <div class="form-group col-6">
-                                    <label for="dietUnit"><i class="fas fa-ruler"></i> 单位</label>
-                                    <select id="dietUnit" class="form-control" required>
-                                        ${unitOptions}
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="dietNotes"><i class="fas fa-sticky-note"></i> 备注（可选）</label>
-                                <textarea id="dietNotes" class="form-control" rows="2" placeholder="例如：烹饪方式、特殊调料等"></textarea>
-                            </div>
-                            
-                            <div class="nutrition-preview" id="nutritionPreview">
-                                <h4><i class="fas fa-calculator"></i> 营养估算</h4>
-                                <div class="preview-cards">
-                                    <div class="preview-card">
-                                        <div class="preview-label">热量</div>
-                                        <div class="preview-value" id="previewCalories">0 kcal</div>
+                                <div class="food-item-body">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-apple-alt"></i> 食物名称</label>
+                                        <select class="food-select form-control">
+                                            <option value="">请选择食物</option>
+                                            ${foodOptions}
+                                            <option value="__custom__">✏️ 其他（手动输入）</option>
+                                        </select>
+                                        <input type="text" class="food-custom-input form-control" placeholder="请输入食物名称" style="display:none; margin-top:6px;">
                                     </div>
-                                    <div class="preview-card">
-                                        <div class="preview-label">碳水</div>
-                                        <div class="preview-value" id="previewCarbs">0 g</div>
-                                    </div>
-                                    <div class="preview-card">
-                                        <div class="preview-label">蛋白质</div>
-                                        <div class="preview-value" id="previewProtein">0 g</div>
-                                    </div>
-                                    <div class="preview-card">
-                                        <div class="preview-label">脂肪</div>
-                                        <div class="preview-value" id="previewFat">0 g</div>
+                                    <div class="form-row">
+                                        <div class="form-group col-6">
+                                            <label><i class="fas fa-weight"></i> 数量</label>
+                                            <input type="number" class="food-quantity form-control" value="100" min="1">
+                                        </div>
+                                        <div class="form-group col-6">
+                                            <label><i class="fas fa-ruler"></i> 单位</label>
+                                            <select class="food-unit form-control">
+                                                ${unitOptions}
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" id="cancelDietBtn">取消</button>
-                                <button type="submit" class="btn btn-primary">保存记录</button>
+                        </div>
+                        
+                        <!-- 添加食物按钮 -->
+                        <button type="button" class="btn btn-secondary btn-block" id="addFoodBtn">
+                            <i class="fas fa-plus"></i> 添加更多食物
+                        </button>
+                        
+                        <!-- 总热量统计 -->
+                        <div class="total-nutrition" id="totalNutrition">
+                            <h4><i class="fas fa-chart-pie"></i> 本餐总计</h4>
+                            <div class="total-cards">
+                                <div class="total-card">
+                                    <div class="total-label">热量</div>
+                                    <div class="total-value calories" id="totalCalories">0 kcal</div>
+                                </div>
+                                <div class="total-card">
+                                    <div class="total-label">碳水</div>
+                                    <div class="total-value" id="totalCarbs">0 g</div>
+                                </div>
+                                <div class="total-card">
+                                    <div class="total-label">蛋白质</div>
+                                    <div class="total-value" id="totalProtein">0 g</div>
+                                </div>
+                                <div class="total-card">
+                                    <div class="total-label">脂肪</div>
+                                    <div class="total-value" id="totalFat">0 g</div>
+                                </div>
+                                <div class="total-card">
+                                    <div class="total-label">膳食纤维</div>
+                                    <div class="total-value" id="totalFiber">0 g</div>
+                                </div>
                             </div>
-                        </form>
+                        </div>
+                        
+                        <!-- 备注 -->
+                        <div class="form-group">
+                            <label for="dietNotes"><i class="fas fa-sticky-note"></i> 备注（可选）</label>
+                            <textarea id="dietNotes" class="form-control" rows="2" placeholder="例如：烹饪方式、特殊调料等"></textarea>
+                        </div>
+                        
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" id="cancelDietBtn">取消</button>
+                            <button type="button" class="btn btn-primary" id="saveDietBtn">
+                                <i class="fas fa-save"></i> 保存本餐记录
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1460,15 +1626,16 @@ class FamilyHealthApp {
         const modalContainer = document.getElementById('modalContainer');
         modalContainer.innerHTML = modalHTML;
         
+        // 存储食物列表
+        let foodItems = [{ name: '', quantity: 100, unit: 'g' }];
+        
         // 绑定事件
         const modalOverlay = modalContainer.querySelector('.modal-overlay');
         const closeBtn = modalContainer.querySelector('.modal-close');
         const cancelBtn = modalContainer.querySelector('#cancelDietBtn');
-        const dietForm = modalContainer.querySelector('#dietForm');
-        const foodSelect = modalContainer.querySelector('#dietFood');
-        const customFoodInput = modalContainer.querySelector('#dietCustomFood');
-        const quantityInput = modalContainer.querySelector('#dietQuantity');
-        const unitSelect = modalContainer.querySelector('#dietUnit');
+        const saveBtn = modalContainer.querySelector('#saveDietBtn');
+        const addFoodBtn = modalContainer.querySelector('#addFoodBtn');
+        const foodListContainer = modalContainer.querySelector('#foodListContainer');
         
         // 关闭模态框
         const closeModal = () => {
@@ -1481,90 +1648,225 @@ class FamilyHealthApp {
         closeBtn.addEventListener('click', closeModal);
         cancelBtn.addEventListener('click', closeModal);
         
-        // 更新营养预览
-        const updateNutritionPreview = () => {
-            const foodName = foodSelect.value || customFoodInput.value;
-            const quantity = parseFloat(quantityInput.value) || 100;
-            const unit = unitSelect.value;
+        // 餐次按钮点击
+        const mealBtns = modalContainer.querySelectorAll('.meal-btn');
+        const mealTypeInput = modalContainer.querySelector('#dietMealType');
+        mealBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                mealBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                mealTypeInput.value = btn.dataset.type;
+            });
+        });
+        
+        // 计算总营养
+        const calculateTotalNutrition = () => {
+            let total = { carbs: 0, protein: 0, fat: 0, fiber: 0, calories: 0 };
+            const foodSelects = foodListContainer.querySelectorAll('.food-item');
             
-            if (foodName && quantity > 0) {
-                const nutrition = calculateNutrition ? calculateNutrition(foodName, quantity, unit) : {
-                    calories: Math.round(quantity * 1.25),
-                    carbs: Math.round(quantity * 0.15),
-                    protein: Math.round(quantity * 0.05),
-                    fat: Math.round(quantity * 0.05),
-                    fiber: Math.round(quantity * 0.02)
-                };
+            foodSelects.forEach((item, index) => {
+                const selectVal = item.querySelector('.food-select').value;
+                const customVal = item.querySelector('.food-custom-input').value.trim();
+                const foodName = selectVal === '__custom__' ? customVal : selectVal;
+                const quantity = parseFloat(item.querySelector('.food-quantity').value) || 0;
+                const unit = item.querySelector('.food-unit').value;
                 
-                document.getElementById('previewCalories').textContent = `${nutrition.calories} kcal`;
-                document.getElementById('previewCarbs').textContent = `${nutrition.carbs} g`;
-                document.getElementById('previewProtein').textContent = `${nutrition.protein} g`;
-                document.getElementById('previewFat').textContent = `${nutrition.fat} g`;
-            }
+                if (foodName && quantity > 0) {
+                    const nutrition = calculateNutrition ? calculateNutrition(foodName, quantity, unit) : {
+                        calories: Math.round(quantity * 1.25),
+                        carbs: Math.round(quantity * 0.15),
+                        protein: Math.round(quantity * 0.05),
+                        fat: Math.round(quantity * 0.05),
+                        fiber: Math.round(quantity * 0.02)
+                    };
+                    total.calories += nutrition.calories;
+                    total.carbs += nutrition.carbs;
+                    total.protein += nutrition.protein;
+                    total.fat += nutrition.fat;
+                    total.fiber += nutrition.fiber;
+                }
+            });
+            
+            // 更新显示
+            document.getElementById('totalCalories').textContent = `${Math.round(total.calories)} kcal`;
+            document.getElementById('totalCarbs').textContent = `${Math.round(total.carbs * 10) / 10} g`;
+            document.getElementById('totalProtein').textContent = `${Math.round(total.protein * 10) / 10} g`;
+            document.getElementById('totalFat').textContent = `${Math.round(total.fat * 10) / 10} g`;
+            document.getElementById('totalFiber').textContent = `${Math.round(total.fiber * 10) / 10} g`;
+            
+            return total;
         };
         
-        // 监听输入变化
-        foodSelect.addEventListener('change', updateNutritionPreview);
-        customFoodInput.addEventListener('input', updateNutritionPreview);
-        quantityInput.addEventListener('input', updateNutritionPreview);
-        unitSelect.addEventListener('change', updateNutritionPreview);
+        // 绑定食物输入变化事件
+        const bindFoodItemEvents = (item, index) => {
+            const foodSelect = item.querySelector('.food-select');
+            const customInput = item.querySelector('.food-custom-input');
+            const quantityInput = item.querySelector('.food-quantity');
+            const unitSelect = item.querySelector('.food-unit');
+            const removeBtn = item.querySelector('.btn-remove-food');
+            
+            // 选择"其他"时显示手动输入框
+            foodSelect.addEventListener('change', () => {
+                if (foodSelect.value === '__custom__') {
+                    customInput.style.display = 'block';
+                    customInput.focus();
+                } else {
+                    customInput.style.display = 'none';
+                    customInput.value = '';
+                }
+                calculateTotalNutrition();
+            });
+            customInput.addEventListener('input', () => calculateTotalNutrition());
+            
+            const handler = () => calculateTotalNutrition();
+            quantityInput.addEventListener('input', handler);
+            unitSelect.addEventListener('change', handler);
+            
+            // 删除按钮
+            removeBtn.addEventListener('click', () => {
+                const items = foodListContainer.querySelectorAll('.food-item');
+                if (items.length > 1) {
+                    item.remove();
+                    calculateTotalNutrition();
+                    updateFoodItemTitles();
+                }
+            });
+        };
         
-        // 初始更新
-        updateNutritionPreview();
+        // 更新食物项标题
+        const updateFoodItemTitles = () => {
+            const items = foodListContainer.querySelectorAll('.food-item');
+            items.forEach((item, index) => {
+                item.querySelector('.food-item-title').textContent = `食物 ${index + 1}`;
+                const removeBtn = item.querySelector('.btn-remove-food');
+                removeBtn.style.display = items.length > 1 ? 'block' : 'none';
+            });
+        };
         
-        // 表单提交
-        dietForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            
-            const foodName = foodSelect.value || customFoodInput.value;
-            if (!foodName.trim()) {
-                alert('请输入食物名称');
-                return;
-            }
-            
-            const quantity = parseFloat(quantityInput.value);
-            if (!quantity || quantity <= 0) {
-                alert('请输入有效的数量');
-                return;
-            }
-            
-            const unit = unitSelect.value;
-            const mealType = document.getElementById('dietMealType').value;
-            const time = document.getElementById('dietTime').value;
-            const notes = document.getElementById('dietNotes').value;
+        // 添加更多食物
+        addFoodBtn.addEventListener('click', () => {
+            const itemCount = foodListContainer.querySelectorAll('.food-item').length;
+            const newItem = document.createElement('div');
+            newItem.className = 'food-item';
+            newItem.setAttribute('data-index', itemCount);
+            newItem.innerHTML = `
+                <div class="food-item-header">
+                    <span class="food-item-title">食物 ${itemCount + 1}</span>
+                    <button type="button" class="btn-remove-food"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="food-item-body">
+                    <div class="form-group">
+                        <label><i class="fas fa-apple-alt"></i> 食物名称</label>
+                        <select class="food-select form-control">
+                            <option value="">请选择食物</option>
+                            ${foodOptions}
+                            <option value="__custom__">✏️ 其他（手动输入）</option>
+                        </select>
+                        <input type="text" class="food-custom-input form-control" placeholder="请输入食物名称" style="display:none; margin-top:6px;">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label><i class="fas fa-weight"></i> 数量</label>
+                            <input type="number" class="food-quantity form-control" value="100" min="1">
+                        </div>
+                        <div class="form-group col-6">
+                            <label><i class="fas fa-ruler"></i> 单位</label>
+                            <select class="food-unit form-control">
+                                ${unitOptions}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            `;
+            foodListContainer.appendChild(newItem);
+            bindFoodItemEvents(newItem, itemCount);
+            updateFoodItemTitles();
+        });
+        
+        // 绑定初始食物项事件
+        bindFoodItemEvents(foodListContainer.querySelector('.food-item'), 0);
+        updateFoodItemTitles();
+        
+        // 保存记录
+        saveBtn.addEventListener('click', () => {
+            const mealType = mealTypeInput.value;
+            const notes = modalContainer.querySelector('#dietNotes').value;
+            const time = new Date().toTimeString().slice(0, 5);
             const date = new Date().toISOString().split('T')[0];
             
-            // 计算营养成分
-            const nutrition = calculateNutrition ? calculateNutrition(foodName, quantity, unit) : {
-                calories: Math.round(quantity * 1.25),
-                carbs: Math.round(quantity * 0.15),
-                protein: Math.round(quantity * 0.05),
-                fat: Math.round(quantity * 0.05),
-                fiber: Math.round(quantity * 0.02)
+            // 收集所有食物数据
+            const foods = [];
+            const foodSelects = foodListContainer.querySelectorAll('.food-item');
+            
+            foodSelects.forEach(item => {
+                const selectVal = item.querySelector('.food-select').value;
+                const customVal = item.querySelector('.food-custom-input').value.trim();
+                const foodName = selectVal === '__custom__' ? customVal : selectVal;
+                const quantity = parseFloat(item.querySelector('.food-quantity').value) || 0;
+                const unit = item.querySelector('.food-unit').value;
+                
+                if (foodName && quantity > 0) {
+                    const nutrition = calculateNutrition ? calculateNutrition(foodName, quantity, unit) : {
+                        calories: Math.round(quantity * 1.25),
+                        carbs: Math.round(quantity * 0.15),
+                        protein: Math.round(quantity * 0.05),
+                        fat: Math.round(quantity * 0.05),
+                        fiber: Math.round(quantity * 0.02)
+                    };
+                    foods.push({
+                        name: foodName,
+                        quantity: quantity,
+                        unit: unit,
+                        nutrition: nutrition
+                    });
+                }
+            });
+            
+            if (foods.length === 0) {
+                alert('请至少添加一种食物！');
+                return;
+            }
+            
+            // 计算总营养
+            const totalNutrition = {
+                calories: 0,
+                carbs: 0,
+                protein: 0,
+                fat: 0,
+                fiber: 0
             };
             
-            // 创建记录
-            const record = {
-                memberId: this.currentMemberId,
-                foodName: foodName,
-                quantity: quantity,
-                unit: unit,
-                mealType: mealType,
-                time: time,
-                date: date,
-                nutrition: nutrition,
-                notes: notes
-            };
+            foods.forEach(food => {
+                totalNutrition.calories += food.nutrition.calories;
+                totalNutrition.carbs += food.nutrition.carbs;
+                totalNutrition.protein += food.nutrition.protein;
+                totalNutrition.fat += food.nutrition.fat;
+                totalNutrition.fiber += food.nutrition.fiber;
+            });
             
-            // 保存记录
-            this.addDietRecord(record);
+            // 为每种食物创建一条记录
+            foods.forEach(food => {
+                const record = {
+                    memberId: this.currentMemberId,
+                    foodName: food.name,
+                    quantity: food.quantity,
+                    unit: food.unit,
+                    mealType: mealType,
+                    time: time,
+                    date: date,
+                    nutrition: food.nutrition,
+                    notes: notes,
+                    mealTotalNutrition: totalNutrition // 存储本餐总营养
+                };
+                this.addDietRecord(record);
+            });
             
-            // 关闭模态框
             closeModal();
-            
-            // 显示成功消息
-            alert('饮食记录已保存！');
+            alert(`饮食记录已保存！本餐共 ${foods.length} 种食物，总热量 ${Math.round(totalNutrition.calories)} kcal`);
         });
+        
+        // 初始计算
+        calculateTotalNutrition();
     }
 
     // 显示添加运动记录模态框
@@ -1574,103 +1876,162 @@ class FamilyHealthApp {
             return;
         }
 
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 class="modal-title">添加运动记录</h3>
-                    <button class="close-btn">&times;</button>
+        // 获取运动类型列表
+        const exerciseTypes = typeof getExerciseTypeList === 'function' ? getExerciseTypeList() : [
+            { name: '跑步', icon: 'fa-running', caloriesPerMin: 10 },
+            { name: '快走', icon: 'fa-person-walking', caloriesPerMin: 5 },
+            { name: '游泳', icon: 'fa-person-swimming', caloriesPerMin: 11 },
+            { name: '健身房', icon: 'fa-dumbbell', caloriesPerMin: 9 }
+        ];
+
+        const exerciseOptions = exerciseTypes.map(ex =>
+            `<option value="${ex.name}">${ex.name}（约${ex.caloriesPerMin}kcal/分钟）</option>`
+        ).join('');
+
+        const modalContainer = document.getElementById('modalContainer');
+        modalContainer.innerHTML = `
+            <div class="modal-overlay active">
+                <div class="modal">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-running"></i> 添加运动记录</h3>
+                        <button class="modal-close">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="exerciseForm">
+                            <div class="form-group">
+                                <label for="exerciseType"><i class="fas fa-dumbbell"></i> 运动类型 *</label>
+                                <select id="exerciseType" class="form-control" required>
+                                    <option value="">请选择运动类型</option>
+                                    ${exerciseOptions}
+                                    <option value="__custom__">✏️ 其他（手动输入）</option>
+                                </select>
+                                <input type="text" id="exerciseCustomType" class="form-control" placeholder="请输入运动类型" style="display:none; margin-top:6px;">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="exerciseDuration"><i class="fas fa-hourglass-end"></i> 运动时长 (分钟) *</label>
+                                <input type="number" id="exerciseDuration" class="form-control" required
+                                       min="1" max="600" placeholder="例如：30" value="30">
+                            </div>
+
+                            <!-- 热量预估 -->
+                            <div class="exercise-calorie-preview" id="exerciseCaloriePreview">
+                                <h4><i class="fas fa-fire"></i> 预估热量消耗</h4>
+                                <div class="calorie-display">
+                                    <span class="calorie-number" id="previewCalories">0</span>
+                                    <span class="calorie-unit">kcal</span>
+                                </div>
+                                <small class="calorie-note">* 按70kg体重估算，实际消耗因体重和强度而异</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="exerciseNotes"><i class="fas fa-sticky-note"></i> 备注（可选）</label>
+                                <textarea id="exerciseNotes" class="form-control" rows="2" placeholder="例如：运动强度、感觉等"></textarea>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" id="cancelExerciseBtn">取消</button>
+                                <button type="submit" class="btn btn-primary">保存记录</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-                <form id="exerciseForm">
-                    <div class="form-group">
-                        <label for="exerciseType">运动类型 *</label>
-                        <input type="text" id="exerciseType" class="form-control" required 
-                               placeholder="例如：跑步、游泳、健身等">
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="exerciseDuration">运动时长 (分钟) *</label>
-                            <input type="number" id="exerciseDuration" class="form-control" required 
-                                   min="1" max="600" placeholder="例如：30">
-                        </div>
-                        <div class="form-group">
-                            <label for="exerciseDate">运动日期 *</label>
-                            <input type="date" id="exerciseDate" class="form-control" required
-                                   value="${new Date().toISOString().slice(0, 10)}">
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="exerciseNotes">备注</label>
-                        <textarea id="exerciseNotes" class="form-control" rows="3"></textarea>
-                    </div>
-                    
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-secondary close-modal">取消</button>
-                        <button type="submit" class="btn btn-primary">添加记录</button>
-                    </div>
-                </form>
             </div>
         `;
 
-        document.getElementById('modalContainer').appendChild(modal);
-
         // 绑定事件
-        const closeBtn = modal.querySelector('.close-btn');
-        const closeModalBtn = modal.querySelector('.close-modal');
-        const form = modal.querySelector('#exerciseForm');
+        const modalOverlay = modalContainer.querySelector('.modal-overlay');
+        const closeBtn = modalContainer.querySelector('.modal-close');
+        const cancelBtn = modalContainer.querySelector('#cancelExerciseBtn');
+        const form = modalContainer.querySelector('#exerciseForm');
+        const typeSelect = modalContainer.querySelector('#exerciseType');
+        const customInput = modalContainer.querySelector('#exerciseCustomType');
+        const durationInput = modalContainer.querySelector('#exerciseDuration');
+        const calorieDisplay = modalContainer.querySelector('#previewCalories');
+        const notesInput = modalContainer.querySelector('#exerciseNotes');
 
         const closeModal = () => {
-            modal.remove();
+            modalContainer.innerHTML = '';
         };
 
-        closeBtn.addEventListener('click', closeModal);
-        closeModalBtn.addEventListener('click', closeModal);
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
-        });
+        // 更新热量预览（必须在使用前定义）
+        const updateCaloriePreview = () => {
+            const selectVal = typeSelect.value;
+            const customVal = customInput.value.trim();
+            const exerciseName = selectVal === '__custom__' ? customVal : selectVal;
+            const duration = parseInt(durationInput.value) || 0;
 
+            if (exerciseName && duration > 0 && typeof calculateExerciseCalories === 'function') {
+                const calories = calculateExerciseCalories(exerciseName, duration);
+                calorieDisplay.textContent = calories;
+            } else {
+                calorieDisplay.textContent = '0';
+            }
+        };
+
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) closeModal();
+        });
+        closeBtn.addEventListener('click', closeModal);
+        cancelBtn.addEventListener('click', closeModal);
+
+        // 选择"其他"时显示输入框
+        typeSelect.addEventListener('change', () => {
+            if (typeSelect.value === '__custom__') {
+                customInput.style.display = 'block';
+                customInput.focus();
+            } else {
+                customInput.style.display = 'none';
+                customInput.value = '';
+            }
+            updateCaloriePreview();
+        });
+        customInput.addEventListener('input', updateCaloriePreview);
+        durationInput.addEventListener('input', updateCaloriePreview);
+
+        // 表单提交
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-            this.saveExercise();
+
+            const selectVal = typeSelect.value;
+            const customVal = customInput.value.trim();
+            const exType = selectVal === '__custom__' ? customVal : selectVal;
+            const duration = parseInt(durationInput.value);
+            const notes = notesInput ? notesInput.value.trim() : '';
+
+            if (!exType) {
+                alert('请选择或输入运动类型！');
+                return;
+            }
+            if (!duration || duration < 1) {
+                alert('请输入有效的运动时长！');
+                return;
+            }
+
+            const caloriesBurned = typeof calculateExerciseCalories === 'function'
+                ? calculateExerciseCalories(exType, duration)
+                : Math.round(duration * 7);
+
+            const exercises = this.getExercises();
+            const newExercise = {
+                id: Date.now().toString(),
+                memberId: this.currentMemberId,
+                type: exType,
+                duration: duration,
+                exerciseDate: new Date().toISOString().split('T')[0],
+                time: new Date().toTimeString().slice(0, 5),
+                caloriesBurned: caloriesBurned,
+                notes: notes,
+                createdAt: new Date().toISOString()
+            };
+
+            exercises.push(newExercise);
+            this.saveExercises(exercises);
+            this.loadExercises();
+            this.updateStats();
+
             closeModal();
         });
-    }
-
-    // 保存运动记录
-    saveExercise() {
-        const type = document.getElementById('exerciseType').value.trim();
-        const duration = parseInt(document.getElementById('exerciseDuration').value);
-        const exerciseDate = document.getElementById('exerciseDate').value;
-        const notes = document.getElementById('exerciseNotes').value.trim();
-
-        if (!type || !duration || !exerciseDate) {
-            alert('请填写所有必填项！');
-            return;
-        }
-
-        if (duration < 1 || duration > 600) {
-            alert('运动时长应在1-600分钟之间！');
-            return;
-        }
-
-        const exercises = this.getExercises();
-        const newExercise = {
-            id: Date.now().toString(),
-            memberId: this.currentMemberId,
-            type,
-            duration,
-            exerciseDate,
-            notes,
-            createdAt: new Date().toISOString()
-        };
-
-        exercises.push(newExercise);
-        this.saveExercises(exercises);
-        this.loadExercises();
-        this.updateStats();
     }
 
     // 删除运动记录

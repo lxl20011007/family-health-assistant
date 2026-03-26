@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>家庭健康助手</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -11,12 +11,19 @@
     <div class="container">
         <!-- 顶部导航 -->
         <header class="header">
-            <h1><i class="fas fa-heartbeat"></i> 家庭健康助手</h1>
+            <div class="header-top">
+                <h1><i class="fas fa-heartbeat"></i> 健康助手</h1>
+                <div class="header-actions">
+                    <button id="cloudSyncBtn" class="btn btn-icon" title="云同步设置">
+                        <i class="fas fa-cloud"></i>
+                    </button>
+                </div>
+            </div>
             <div class="member-selector">
                 <select id="memberSelect">
                     <option value="">请选择家庭成员</option>
                 </select>
-                <button id="addMemberBtn" class="btn btn-primary">
+                <button id="addMemberBtn" class="btn btn-primary btn-sm">
                     <i class="fas fa-user-plus"></i> 添加成员
                 </button>
             </div>
@@ -24,35 +31,11 @@
 
         <!-- 主内容区域 -->
         <main class="main-content">
-            <!-- 左侧导航 -->
-            <nav class="sidebar">
-                <ul>
-                    <li class="active" data-tab="dashboard">
-                        <i class="fas fa-home"></i> 首页
-                    </li>
-                    <li data-tab="members">
-                        <i class="fas fa-users"></i> 家庭成员
-                    </li>
-                    <li data-tab="health">
-                        <i class="fas fa-heart"></i> 健康指标
-                    </li>
-                    <li data-tab="diet">
-                        <i class="fas fa-utensils"></i> 饮食管理
-                    </li>
-                    <li data-tab="exercise">
-                        <i class="fas fa-running"></i> 运动记录
-                    </li>
-                    <li data-tab="ai-consultation">
-                        <i class="fas fa-robot"></i> AI问诊
-                    </li>
-                </ul>
-            </nav>
-
-            <!-- 右侧内容区域 -->
+            <!-- 内容区域 -->
             <div class="content-area">
                 <!-- 首页 -->
                 <div id="dashboard" class="tab-content active">
-                    <h2><i class="fas fa-home"></i> 欢迎使用家庭健康助手</h2>
+                    <h2><i class="fas fa-home"></i> 首页</h2>
                     <div class="welcome-message">
                         <p>这是一个本地运行的家庭健康管理工具，所有数据都保存在您的设备中。</p>
                         <div class="quick-stats">
@@ -137,7 +120,7 @@
                             <i class="fas fa-plus"></i> 添加记录
                         </button>
                         <div class="date-filter">
-                            <input type="date" id="dietDate" value="${new Date().toISOString().split('T')[0]}">
+                            <input type="date" id="dietDate">
                         </div>
                     </div>
                     <div class="diet-summary" id="dietSummary">
@@ -154,9 +137,15 @@
                 <!-- 运动记录 -->
                 <div id="exercise" class="tab-content">
                     <h2><i class="fas fa-running"></i> 运动记录</h2>
-                    <button id="addExerciseBtn" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> 添加记录
-                    </button>
+                    <div class="diet-actions">
+                        <button id="addExerciseBtn" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> 添加记录
+                        </button>
+                        <div class="date-filter">
+                            <input type="date" id="exerciseDate">
+                        </div>
+                    </div>
+                    <div class="exercise-summary" id="exerciseSummary"></div>
                     <div class="exercise-list" id="exerciseList">
                         <div class="empty-state">
                             <i class="fas fa-dumbbell"></i>
@@ -185,14 +174,6 @@
                                 <i class="fas fa-info-circle"></i> 密钥仅保存在本地浏览器中，不会上传到任何服务器。
                                 <a href="https://platform.deepseek.com/api_keys" target="_blank">获取API密钥</a>
                             </p>
-                        </div>
-
-                        <!-- 免责声明 -->
-                        <div class="disclaimer-section">
-                            <div class="disclaimer-box">
-                                <h4><i class="fas fa-exclamation-triangle"></i> 重要声明</h4>
-                                <p>AI健康助手提供的信息仅供参考，不能替代专业医疗建议。如有紧急医疗情况，请立即联系医生或拨打急救电话。</p>
-                            </div>
                         </div>
 
                         <!-- 聊天区域 -->
@@ -226,11 +207,37 @@
                             
                             <div class="chat-input-area">
                                 <div class="input-wrapper">
+                                    <!-- 工具按钮 -->
+                                    <div class="input-tools">
+                                        <button type="button" id="uploadFileBtn" class="tool-btn" title="上传文件（图片、检查报告等）">
+                                            <i class="fas fa-paperclip"></i>
+                                        </button>
+                                        <button type="button" id="voiceInputBtn" class="tool-btn" title="语音输入">
+                                            <i class="fas fa-microphone"></i>
+                                        </button>
+                                        <input type="file" id="fileInput" accept="image/*,.pdf,.txt,.doc,.docx" style="display:none;">
+                                    </div>
                                     <textarea id="chatInput" placeholder="请输入您的健康问题..." rows="3"></textarea>
                                     <button id="sendMessageBtn" class="btn btn-primary">
                                         <i class="fas fa-paper-plane"></i> 发送
                                     </button>
                                 </div>
+
+                                <!-- 文件预览区域 -->
+                                <div id="filePreview" class="file-preview" style="display:none;">
+                                    <div class="file-preview-item">
+                                        <i class="fas fa-file"></i>
+                                        <span id="filePreviewName">文件名</span>
+                                        <button type="button" id="removeFileBtn" class="file-remove-btn"><i class="fas fa-times"></i></button>
+                                    </div>
+                                </div>
+
+                                <!-- 语音录制提示 -->
+                                <div id="voiceIndicator" class="voice-indicator" style="display:none;">
+                                    <i class="fas fa-microphone recording-icon"></i>
+                                    <span>正在录音...点击麦克风停止</span>
+                                </div>
+
                                 <div class="input-hints">
                                     <span class="hint">按 Enter 发送，Shift+Enter 换行</span>
                                     <span class="hint">您可以询问：症状分析、健康建议、用药指导等</span>
@@ -242,18 +249,88 @@
             </div>
         </main>
 
-        <!-- 底部信息 -->
-        <footer class="footer">
-            <p>© 2026 家庭健康助手 | 数据本地存储，保护您的隐私</p>
-        </footer>
+        <!-- 底部导航栏 -->
+        <nav class="bottom-nav">
+            <div class="nav-item active" data-tab="dashboard">
+                <i class="fas fa-home"></i>
+                <span>首页</span>
+            </div>
+            <div class="nav-item" data-tab="health">
+                <i class="fas fa-heart"></i>
+                <span>健康</span>
+            </div>
+            <div class="nav-item" data-tab="diet">
+                <i class="fas fa-utensils"></i>
+                <span>饮食</span>
+            </div>
+            <div class="nav-item" data-tab="exercise">
+                <i class="fas fa-running"></i>
+                <span>运动</span>
+            </div>
+            <div class="nav-item" data-tab="ai-consultation">
+                <i class="fas fa-robot"></i>
+                <span>AI问诊</span>
+            </div>
+        </nav>
     </div>
 
     <!-- 模态框容器 -->
     <div id="modalContainer"></div>
 
+    <!-- 云同步设置模态框 -->
+    <div id="cloudSyncModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-cloud"></i> 云同步设置</h3>
+                <button class="close-btn" onclick="closeModal('cloudSyncModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="description">
+                    启用云同步后，您的数据将自动同步到Supabase云端，实现多设备访问和备份。<br>
+                    <strong>注意：您需要自己创建Supabase项目来使用此功能。</strong>
+                </p>
+
+                <div class="form-group">
+                    <label for="supabaseUrlInput">Supabase URL:</label>
+                    <input type="url" id="supabaseUrlInput" placeholder="https://your-project.supabase.co">
+                    <small>从Supabase项目设置中获取</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="supabaseKeyInput">Supabase anon key:</label>
+                    <input type="password" id="supabaseKeyInput" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+                    <small>从Supabase项目设置 → API中获取</small>
+                </div>
+
+                <div class="sync-status" id="syncStatus">
+                    <span class="status-indicator disconnected"></span>
+                    <span class="status-text">未连接</span>
+                </div>
+
+                <div class="form-actions">
+                    <button id="testConnectionBtn" class="btn btn-secondary">测试连接</button>
+                    <button id="saveCloudConfigBtn" class="btn btn-primary">保存并启用</button>
+                    <button id="disableCloudSyncBtn" class="btn btn-danger" style="display:none;">禁用云同步</button>
+                </div>
+
+                <div class="help-section">
+                    <h4>如何设置？</h4>
+                    <ol>
+                        <li>注册 <a href="https://supabase.com" target="_blank">Supabase</a> 并创建项目</li>
+                        <li>在项目设置中获取URL和anon key</li>
+                        <li>在SQL编辑器中运行我们提供的建表脚本</li>
+                        <li>在此处输入凭据并保存</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript文件 -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="diet-manager.js"></script>
     <script src="ai-consultation.js"></script>
+    <script src="supabase-client.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

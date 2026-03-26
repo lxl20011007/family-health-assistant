@@ -131,3 +131,118 @@ function formatTime(date = new Date()) {
     const minutes = date.getMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes}`;
 }
+
+// ==================== 运动热量消耗数据库 ====================
+// 根据不同运动类型和体重计算热量消耗（每分钟消耗热量，基于70kg体重）
+const EXERCISE_DATABASE = {
+    '跑步': { 
+        name: '跑步',
+        icon: 'fa-running',
+        caloriesPerMin: 10,  // 每分钟消耗热量
+        description: '中等速度跑步'
+    },
+    '快走': { 
+        name: '快走',
+        icon: 'fa-person-walking',
+        caloriesPerMin: 5,
+        description: '快速行走'
+    },
+    '游泳': { 
+        name: '游泳',
+        icon: 'fa-person-swimming',
+        caloriesPerMin: 11,
+        description: '中等强度游泳'
+    },
+    '骑自行车': { 
+        name: '骑自行车',
+        icon: 'fa-person-biking',
+        caloriesPerMin: 8,
+        description: '中等速度骑行'
+    },
+    '健身房': { 
+        name: '健身房',
+        icon: 'fa-dumbbell',
+        caloriesPerMin: 9,
+        description: '综合力量训练'
+    },
+    '瑜伽': { 
+        name: '瑜伽',
+        icon: 'fa-spa',
+        caloriesPerMin: 3,
+        description: '瑜伽练习'
+    },
+    '跳绳': { 
+        name: '跳绳',
+        icon: 'fa-person-hiking',
+        caloriesPerMin: 12,
+        description: '跳绳运动'
+    },
+    '篮球': { 
+        name: '篮球',
+        icon: 'fa-basketball',
+        caloriesPerMin: 10,
+        description: '篮球比赛'
+    },
+    '足球': { 
+        name: '足球',
+        icon: 'fa-futbol',
+        caloriesPerMin: 11,
+        description: '足球比赛'
+    },
+    '羽毛球': { 
+        name: '羽毛球',
+        icon: 'fa-badminton',
+        caloriesPerMin: 7,
+        description: '羽毛球运动'
+    },
+    '乒乓球': { 
+        name: '乒乓球',
+        icon: 'fa-table-tennis',
+        caloriesPerMin: 6,
+        description: '乒乓球运动'
+    },
+    '登山': { 
+        name: '登山',
+        icon: 'fa-mountain',
+        caloriesPerMin: 9,
+        description: '登山运动'
+    },
+    '跳舞': { 
+        name: '跳舞',
+        icon: 'fa-music',
+        caloriesPerMin: 7,
+        description: '舞蹈运动'
+    },
+    '拳击': { 
+        name: '拳击',
+        icon: 'fa-hand-fist',
+        caloriesPerMin: 13,
+        description: '拳击训练'
+    },
+    '散步': { 
+        name: '散步',
+        icon: 'fa-person-walking',
+        caloriesPerMin: 3,
+        description: '悠闲散步'
+    }
+};
+
+// 获取运动类型列表
+function getExerciseTypeList() {
+    return Object.values(EXERCISE_DATABASE);
+}
+
+// 计算运动热量消耗
+function calculateExerciseCalories(exerciseType, duration, weight = 70) {
+    const exercise = EXERCISE_DATABASE[exerciseType];
+    if (!exercise) {
+        // 如果找不到，使用默认值
+        return Math.round(duration * 7);
+    }
+    
+    // 根据体重调整热量消耗（基准70kg）
+    const weightFactor = weight / 70;
+    const calories = Math.round(exercise.caloriesPerMin * duration * weightFactor);
+    
+    return calories;
+}
