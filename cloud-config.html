@@ -241,10 +241,12 @@
             key: 'sb_publishable_PzWEcHxNBgDB0LnDKe43zQ_vT1Fgr1s'
         };
 
-        // 生成二维码 - 使用当前页面 URL 作为二维码内容
-        const currentPageUrl = window.location.href;
+        // 生成二维码 - 使用当前页面的完整 URL
+        const baseUrl = window.location.origin + window.location.pathname;
+        const qrUrl = baseUrl + '?auto=1';
+        
         new QRCode(document.getElementById('qrcode'), {
-            text: currentPageUrl,
+            text: qrUrl,
             width: 250,
             height: 250,
             colorDark: '#667eea',
@@ -276,18 +278,20 @@
             // 显示成功消息
             alert('✅ 配置已保存！\n\n现在请：\n1. 打开家庭健康助手应用\n2. 点击右上角 ☁️ 云同步按钮\n3. 点击"保存并启用"\n\n配置信息已自动填入！');
             
-            // 尝试打开应用（如果在同一域名）
+            // 尝试打开应用
             setTimeout(() => {
                 window.location.href = './index.html';
             }, 1000);
         }
 
-        // 检查是否从二维码扫描打开
+        // 检查是否从二维码扫描打开（带 ?auto=1 参数）
         window.addEventListener('load', () => {
-            // 如果有 URL 参数，说明是从其他地方打开的
             const params = new URLSearchParams(window.location.search);
             if (params.has('auto')) {
-                autoFillConfig();
+                // 延迟一下，让页面完全加载
+                setTimeout(() => {
+                    autoFillConfig();
+                }, 500);
             }
         });
     </script>
