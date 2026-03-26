@@ -625,36 +625,38 @@ class FamilyHealthApp {
                     <h3 class="modal-title">${member ? '编辑家庭成员' : '添加家庭成员'}</h3>
                     <button class="close-btn">&times;</button>
                 </div>
-                <form id="memberForm">
-                    <div class="form-group">
-                        <label for="memberName">姓名 *</label>
-                        <input type="text" id="memberName" class="form-control" required 
-                               value="${member ? member.name : ''}">
-                    </div>
-                    <div class="form-row">
+                <div class="modal-body">
+                    <form id="memberForm">
                         <div class="form-group">
-                            <label for="memberGender">性别 *</label>
-                            <select id="memberGender" class="form-control" required>
-                                <option value="">请选择</option>
-                                <option value="male" ${member && member.gender === 'male' ? 'selected' : ''}>男</option>
-                                <option value="female" ${member && member.gender === 'female' ? 'selected' : ''}>女</option>
-                            </select>
+                            <label for="memberName">姓名 *</label>
+                            <input type="text" id="memberName" class="form-control" required 
+                                   value="${member ? member.name : ''}">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="memberGender">性别 *</label>
+                                <select id="memberGender" class="form-control" required>
+                                    <option value="">请选择</option>
+                                    <option value="male" ${member && member.gender === 'male' ? 'selected' : ''}>男</option>
+                                    <option value="female" ${member && member.gender === 'female' ? 'selected' : ''}>女</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="memberBirthDate">出生日期 *</label>
+                                <input type="date" id="memberBirthDate" class="form-control" required
+                                       value="${member ? member.birthDate : ''}">
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label for="memberBirthDate">出生日期 *</label>
-                            <input type="date" id="memberBirthDate" class="form-control" required
-                                   value="${member ? member.birthDate : ''}">
+                            <label for="memberNotes">备注</label>
+                            <textarea id="memberNotes" class="form-control" rows="3">${member ? member.notes || '' : ''}</textarea>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="memberNotes">备注</label>
-                        <textarea id="memberNotes" class="form-control" rows="3">${member ? member.notes || '' : ''}</textarea>
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-secondary close-modal">取消</button>
-                        <button type="submit" class="btn btn-primary">${member ? '更新' : '添加'}</button>
-                    </div>
-                </form>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary close-modal">取消</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">${member ? '更新' : '添加'}</button>
+                </div>
             </div>
         `;
 
@@ -664,6 +666,7 @@ class FamilyHealthApp {
         const closeBtn = modal.querySelector('.close-btn');
         const closeModalBtn = modal.querySelector('.close-modal');
         const form = modal.querySelector('#memberForm');
+        const submitBtn = modal.querySelector('#submitBtn');
 
         const closeModal = () => {
             modal.remove();
@@ -675,10 +678,14 @@ class FamilyHealthApp {
             if (e.target === modal) closeModal();
         });
 
-        form.addEventListener('submit', (e) => {
+        submitBtn.addEventListener('click', (e) => {
             e.preventDefault();
             this.saveMember(memberId);
             closeModal();
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
         });
     }
 
