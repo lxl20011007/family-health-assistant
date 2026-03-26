@@ -703,8 +703,7 @@ body {
     border-radius: 20px 20px 0 0;
     width: 100%;
     max-height: 90vh;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: hidden;
     animation: slideUp 0.3s ease;
     display: flex;
     flex-direction: column;
@@ -714,6 +713,7 @@ body {
     display: flex;
     flex-direction: column;
     height: 100%;
+    min-height: 0;
 }
 
 @keyframes slideUp {
@@ -750,6 +750,7 @@ body {
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    min-height: 0;
 }
 
 .modal-footer {
@@ -1422,6 +1423,7 @@ body {
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    min-height: 0;
 }
 
 #cloudSyncModal .description {
