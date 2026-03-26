@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家庭健康助手 - 云同步配置</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .qr-section {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .qr-section h2 {
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        #qrcode {
+            display: inline-block;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .info-section {
+            margin-bottom: 25px;
+        }
+
+        .info-section h3 {
+            font-size: 1rem;
+            color: #333;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            word-break: break-all;
+            font-size: 0.85rem;
+            color: #555;
+            font-family: monospace;
+            line-height: 1.6;
+        }
+
+        .copy-btn {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 6px 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:active {
+            background: #764ba2;
+            transform: scale(0.98);
+        }
+
+        .steps {
+            background: #f0f3ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .steps h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .steps ol {
+            margin-left: 20px;
+            color: #555;
+            font-size: 0.9rem;
+            line-height: 1.8;
+        }
+
+        .steps li {
+            margin-bottom: 8px;
+        }
+
+        .footer {
+            text-align: center;
+            color: #999;
+            font-size: 0.85rem;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .success-msg {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            #qrcode {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌐 云同步配置</h1>
+            <p>家庭健康助手 - 多设备数据共享</p>
+        </div>
+
+        <div class="success-msg" id="successMsg">✅ 已复制到剪贴板！</div>
+
+        <div class="qr-section">
+            <h2>📱 扫描二维码快速配置</h2>
+            <p style="color: #999; font-size: 0.85rem; margin-bottom: 15px;">用手机摄像头扫描下方二维码，自动填入配置</p>
+            <div id="qrcode"></div>
+        </div>
+
+        <div class="steps">
+            <h3>📋 配置步骤</h3>
+            <ol>
+                <li>在手机上打开应用</li>
+                <li>点击右上角 ☁️ 云同步按钮</li>
+                <li>扫描上方二维码 <strong>或</strong> 手动输入下方信息</li>
+                <li>点击"保存并启用"</li>
+                <li>完成！数据自动同步</li>
+            </ol>
+        </div>
+
+        <div class="info-section">
+            <h3>🔗 Project URL</h3>
+            <div class="info-box" id="urlBox">https://iydefklofqhzckqcdrjw.supabase.co</div>
+            <button class="copy-btn" onclick="copyToClipboard('urlBox')">复制 URL</button>
+        </div>
+
+        <div class="info-section">
+            <h3>🔑 API Key</h3>
+            <div class="info-box" id="keyBox">sb_publishable_PzWEcHxNBgDB0LnDKe43zQ_vT1Fgr1s</div>
+            <button class="copy-btn" onclick="copyToClipboard('keyBox')">复制 Key</button>
+        </div>
+
+        <div class="info-section">
+            <h3>📝 完整配置链接</h3>
+            <div class="info-box" id="linkBox" style="word-break: break-word; font-size: 0.8rem;">
+                <span id="configLink"></span>
+            </div>
+            <button class="copy-btn" onclick="copyToClipboard('linkBox')">复制链接</button>
+        </div>
+
+        <div class="footer">
+            <p>💡 提示：将此页面分享给家人，他们可以扫描二维码或复制信息来配置云同步</p>
+            <p style="margin-top: 10px; font-size: 0.8rem;">所有数据都保存在你的 Supabase 项目中，安全可靠</p>
+        </div>
+    </div>
+
+    <script>
+        // 生成配置链接
+        const url = 'https://iydefklofqhzckqcdrjw.supabase.co';
+        const key = 'sb_publishable_PzWEcHxNBgDB0LnDKe43zQ_vT1Fgr1s';
+        const configLink = `supabase://config?url=${encodeURIComponent(url)}&key=${encodeURIComponent(key)}`;
+        
+        document.getElementById('configLink').textContent = configLink;
+
+        // 生成二维码
+        new QRCode(document.getElementById('qrcode'), {
+            text: configLink,
+            width: 250,
+            height: 250,
+            colorDark: '#667eea',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        // 复制到剪贴板
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const msg = document.getElementById('successMsg');
+                msg.style.display = 'block';
+                setTimeout(() => {
+                    msg.style.display = 'none';
+                }, 2000);
+            }).catch(err => {
+                alert('复制失败，请手动复制');
+            });
+        }
+    </script>
+</body>
+</html>
