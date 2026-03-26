@@ -96,7 +96,7 @@
         .copy-btn {
             display: inline-block;
             margin-top: 8px;
-            padding: 6px 12px;
+            padding: 8px 14px;
             background: #667eea;
             color: white;
             border: none;
@@ -155,6 +155,25 @@
             font-size: 0.9rem;
         }
 
+        .auto-fill-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .auto-fill-btn:active {
+            transform: scale(0.98);
+        }
+
         @media (max-width: 480px) {
             .container {
                 padding: 20px;
@@ -181,8 +200,10 @@
 
         <div class="qr-section">
             <h2>📱 扫描二维码快速配置</h2>
-            <p style="color: #999; font-size: 0.85rem; margin-bottom: 15px;">用手机摄像头扫描下方二维码，自动填入配置</p>
+            <p style="color: #999; font-size: 0.85rem; margin-bottom: 15px;">用手机摄像头扫描下方二维码</p>
             <div id="qrcode"></div>
+            <p style="color: #999; font-size: 0.8rem; margin-top: 12px;">或点击下方按钮自动填入配置</p>
+            <button class="auto-fill-btn" onclick="autoFillConfig()">🚀 自动填入配置</button>
         </div>
 
         <div class="steps">
@@ -190,7 +211,7 @@
             <ol>
                 <li>在手机上打开应用</li>
                 <li>点击右上角 ☁️ 云同步按钮</li>
-                <li>扫描上方二维码 <strong>或</strong> 手动输入下方信息</li>
+                <li>扫描上方二维码 <strong>或</strong> 点击"自动填入配置"</li>
                 <li>点击"保存并启用"</li>
                 <li>完成！数据自动同步</li>
             </ol>
@@ -199,40 +220,31 @@
         <div class="info-section">
             <h3>🔗 Project URL</h3>
             <div class="info-box" id="urlBox">https://iydefklofqhzckqcdrjw.supabase.co</div>
-            <button class="copy-btn" onclick="copyToClipboard('urlBox')">复制 URL</button>
+            <button class="copy-btn" onclick="copyToClipboard('urlBox')">📋 复制 URL</button>
         </div>
 
         <div class="info-section">
             <h3>🔑 API Key</h3>
             <div class="info-box" id="keyBox">sb_publishable_PzWEcHxNBgDB0LnDKe43zQ_vT1Fgr1s</div>
-            <button class="copy-btn" onclick="copyToClipboard('keyBox')">复制 Key</button>
-        </div>
-
-        <div class="info-section">
-            <h3>📝 完整配置链接</h3>
-            <div class="info-box" id="linkBox" style="word-break: break-word; font-size: 0.8rem;">
-                <span id="configLink"></span>
-            </div>
-            <button class="copy-btn" onclick="copyToClipboard('linkBox')">复制链接</button>
+            <button class="copy-btn" onclick="copyToClipboard('keyBox')">📋 复制 Key</button>
         </div>
 
         <div class="footer">
-            <p>💡 提示：将此页面分享给家人，他们可以扫描二维码或复制信息来配置云同步</p>
+            <p>💡 提示：将此页面分享给家人，他们可以扫描二维码或点击按钮来配置云同步</p>
             <p style="margin-top: 10px; font-size: 0.8rem;">所有数据都保存在你的 Supabase 项目中，安全可靠</p>
         </div>
     </div>
 
     <script>
-        // 生成配置链接
-        const url = 'https://iydefklofqhzckqcdrjw.supabase.co';
-        const key = 'sb_publishable_PzWEcHxNBgDB0LnDKe43zQ_vT1Fgr1s';
-        const configLink = `supabase://config?url=${encodeURIComponent(url)}&key=${encodeURIComponent(key)}`;
-        
-        document.getElementById('configLink').textContent = configLink;
+        const CONFIG = {
+            url: 'https://iydefklofqhzckqcdrjw.supabase.co',
+            key: 'sb_publishable_PzWEcHxNBgDB0LnDKe43zQ_vT1Fgr1s'
+        };
 
-        // 生成二维码
+        // 生成二维码 - 使用当前页面 URL 作为二维码内容
+        const currentPageUrl = window.location.href;
         new QRCode(document.getElementById('qrcode'), {
-            text: configLink,
+            text: currentPageUrl,
             width: 250,
             height: 250,
             colorDark: '#667eea',
@@ -255,6 +267,29 @@
                 alert('复制失败，请手动复制');
             });
         }
+
+        // 自动填入配置
+        function autoFillConfig() {
+            // 保存配置到 localStorage
+            localStorage.setItem('supabase_config', JSON.stringify(CONFIG));
+            
+            // 显示成功消息
+            alert('✅ 配置已保存！\n\n现在请：\n1. 打开家庭健康助手应用\n2. 点击右上角 ☁️ 云同步按钮\n3. 点击"保存并启用"\n\n配置信息已自动填入！');
+            
+            // 尝试打开应用（如果在同一域名）
+            setTimeout(() => {
+                window.location.href = './index.html';
+            }, 1000);
+        }
+
+        // 检查是否从二维码扫描打开
+        window.addEventListener('load', () => {
+            // 如果有 URL 参数，说明是从其他地方打开的
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('auto')) {
+                autoFillConfig();
+            }
+        });
     </script>
 </body>
 </html>
