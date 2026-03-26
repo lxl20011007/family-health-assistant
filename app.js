@@ -55,6 +55,12 @@ class FamilyHealthApp {
         // 添加运动记录按钮
         document.getElementById('addExerciseBtn').addEventListener('click', () => this.showAddExerciseModal());
 
+        // 云同步按钮
+        const cloudSyncBtn = document.getElementById('cloudSyncBtn');
+        if (cloudSyncBtn) {
+            cloudSyncBtn.addEventListener('click', () => this.showCloudSyncModal());
+        }
+
         // 健康记录筛选
         document.getElementById('healthFilter').addEventListener('change', () => this.loadHealthRecords());
         
@@ -2104,6 +2110,169 @@ class FamilyHealthApp {
     }
 
     // ==================== 云同步方法 ====================
+
+    // 显示云同步设置模态框
+    showCloudSyncModal() {
+        const modal = document.getElementById('cloudSyncModal');
+        if (!modal) {
+            alert('云同步模态框未找到');
+            return;
+        }
+
+        // 显示模态框
+        modal.style.display = 'flex';
+
+        // 绑定按钮事件
+        const testBtn = document.getElementById('testConnectionBtn');
+        const saveBtn = document.getElementById('saveCloudConfigBtn');
+        const disableBtn = document.getElementById('disableCloudSyncBtn');
+        const closeBtn = modal.querySelector('.close-btn');
+
+        if (testBtn) {
+            testBtn.onclick = () => this.testCloudConnection();
+        }
+
+        if (saveBtn) {
+            saveBtn.onclick = () => this.saveCloudConfig();
+        }
+
+        if (disableBtn) {
+            disableBtn.onclick = () => this.disableCloudSync();
+        }
+
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                modal.style.display = 'none';
+            };
+        }
+
+        // 点击模态框外部关闭
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        };
+    }
+
+    // 测试云连接
+    async testCloudConnection() {
+        const urlInput = document.getElementById('supabaseUrlInput');
+        const keyInput = document.getElementById('supabaseKeyInput');
+        const url = urlInput?.value.trim();
+        const key = keyInput?.value.trim();
+
+        if (!url || !key) {
+            alert('请输入 URL 和 API Key');
+            return;
+        }
+
+        if (typeof supabaseClient === 'undefined') {
+            alert('Supabase 客户端未加载');
+            return;
+        }
+
+        try {
+            // 临时配置并测试
+            supabaseClient.saveConfig(url, key);
+            supabaseClient.supabase = null;
+            supabaseClient.initialize();
+
+            // 等待初始化
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            if (supabaseClient.isConnected) {
+                alert('✅ 连接成功！');
+                this.updateCloudSyncUI(true);
+            } else {
+                alert('❌ 连接失败，请检查 URL 和 Key');
+                this.updateCloudSyncUI(false);
+            }
+        } catch (error) {
+            alert(`❌ 连接失败: ${error.message}`);
+            this.updateCloudSyncUI(false);
+        }
+    }
+
+    // 保存云配置
+    async saveCloudConfig() {
+        const urlInput = document.getElementById('supabaseUrlInput');
+        const keyInput = document.getElementById('supabaseKeyInput');
+        const url = urlInput?.value.trim();
+        const key = keyInput?.value.trim();
+
+        if (!url || !key) {
+            alert('请输入 URL 和 API Key');
+            return;
+        }
+
+        if (typeof supabaseClient === 'undefined') {
+            alert('Supabase 客户端未加载');
+            return;
+        }
+
+        try {
+            const result = await supabaseClient.enableSync(url, key);
+            
+            if (result.success) {
+                alert('✅ 云同步已启用！开始同步数据...');
+                this.updateCloudSyncUI(true);
+                
+                // 开始同步
+                this.syncWithCloud();
+            } else {
+                alert(`❌ ${result.message}`);
+                this.updateCloudSyncUI(false);
+            }
+        } catch (error) {
+            alert(`❌ 启用失败: ${error.message}`);
+            this.updateCloudSyncUI(false);
+        }
+    }
+
+    // 禁用云同步
+    disableCloudSync() {
+        if (!confirm('确定要禁用云同步吗？本地数据不会删除。')) {
+            return;
+        }
+
+        if (typeof supabaseClient !== 'undefined') {
+            supabaseClient.disableSync();
+        }
+
+        alert('✅ 云同步已禁用');
+        this.updateCloudSyncUI(false);
+
+        // 关闭模态框
+        const modal = document.getElementById('cloudSyncModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    // 更新云同步 UI
+    updateCloudSyncUI(isConnected) {
+        const indicator = document.querySelector('#cloudSyncModal .status-indicator');
+        const statusText = document.querySelector('#cloudSyncModal .status-text');
+        const disableBtn = document.getElementById('disableCloudSyncBtn');
+
+        if (indicator) {
+            indicator.className = 'status-indicator';
+            if (isConnected) {
+                indicator.classList.add('connected');
+                indicator.style.background = '#4CAF50';
+            } else {
+                indicator.style.background = '#999';
+            }
+        }
+
+        if (statusText) {
+            statusText.textContent = isConnected ? '已连接到云同步' : '未连接';
+        }
+
+        if (disableBtn) {
+            disableBtn.style.display = isConnected ? 'block' : 'none';
+        }
+    }
 
     // 与云端同步数据
     async syncWithCloud() {
