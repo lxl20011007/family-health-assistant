@@ -827,6 +827,7 @@ class FamilyHealthApp {
         let valueDisplay = '';
         let typeClass = '';
         let icon = '❤️';
+        let statusBadge = '';
         
         switch (record.type) {
             case 'blood_pressure':
@@ -858,6 +859,10 @@ class FamilyHealthApp {
                 valueDisplay = `${record.value} kg/m²`;
                 typeClass = 'bmi';
                 icon = '📊';
+                
+                // 添加 BMI 状态标签
+                const bmiStatus = this.getBMIStatus(record.value);
+                statusBadge = `<span class="bmi-status-badge ${bmiStatus.class}">${bmiStatus.text}</span>`;
                 break;
         }
 
@@ -884,6 +889,7 @@ class FamilyHealthApp {
             <div class="card-body">
                 <div class="value">${valueDisplay}</div>
                 <span class="type ${typeClass}">${typeText}</span>
+                ${statusBadge}
                 ${record.notes ? `<p class="mt-2">备注：${record.notes}</p>` : ''}
             </div>
             <div class="card-footer">
@@ -897,6 +903,31 @@ class FamilyHealthApp {
         });
 
         return card;
+    }
+
+    // 获取 BMI 状态
+    getBMIStatus(bmi) {
+        if (bmi < 18.5) {
+            return {
+                text: '体重过低',
+                class: 'bmi-low'
+            };
+        } else if (bmi < 25) {
+            return {
+                text: '正常体重',
+                class: 'bmi-normal'
+            };
+        } else if (bmi < 30) {
+            return {
+                text: '超重',
+                class: 'bmi-overweight'
+            };
+        } else {
+            return {
+                text: '肥胖',
+                class: 'bmi-obese'
+            };
+        }
     }
 
     // 显示添加健康记录模态框
