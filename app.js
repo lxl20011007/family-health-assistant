@@ -909,6 +909,9 @@ class FamilyHealthApp {
         const member = this.getMembers().find(m => m.id === this.currentMemberId);
         const age = member ? this.calculateAge(member.birthDate) : null;
 
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay active';
+        
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.innerHTML = `
@@ -976,7 +979,8 @@ class FamilyHealthApp {
             </div>
         `;
 
-        document.getElementById('modalContainer').appendChild(modal);
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
 
         // 绑定事件
         const closeBtn = modal.querySelector('.close-btn');
@@ -986,13 +990,13 @@ class FamilyHealthApp {
         const submitBtn = modal.querySelector('#submitHealthBtn');
 
         const closeModal = () => {
-            modal.remove();
+            overlay.remove();
         };
 
         closeBtn.addEventListener('click', closeModal);
         closeModalBtn.addEventListener('click', closeModal);
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeModal();
         });
 
         // 根据类型显示不同的输入字段和正常值
