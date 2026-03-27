@@ -18,9 +18,58 @@ class FamilyHealthApp {
         const exerciseDateEl = document.getElementById('exerciseDate');
         if (exerciseDateEl) exerciseDateEl.value = today;
         
-        // 移除用药提醒检查
-        // this.checkMedicationReminders();
-        // setInterval(() => this.checkMedicationReminders(), 30000);
+        // 🔥 关键：启动自动同步机制
+        this.startAutoSync();
+    }
+
+    // 启动自动同步机制
+    startAutoSync() {
+        // 每 30 秒检查一次是否需要同步
+        setInterval(() => {
+            this.autoSyncFromCloud();
+        }, 30000);
+
+        // 页面获得焦点时立即同步
+        window.addEventListener('focus', () => {
+            console.log('页面获得焦点，立即同步数据');
+            this.autoSyncFromCloud();
+        });
+
+        // 页面可见性变化时同步
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                console.log('页面变为可见，立即同步数据');
+                this.autoSyncFromCloud();
+            }
+        });
+    }
+
+    // 自动从云端同步数据
+    async autoSyncFromCloud() {
+        if (typeof supabaseClient === 'undefined' || !supabaseClient.isConnected) {
+            return;
+        }
+
+        try {
+            console.log('🔄 开始自动同步数据...');
+
+            // 拉取所有数据
+            await this.syncFamilyMembers();
+            await this.syncHealthRecords();
+            await this.syncDietRecords();
+            await this.syncExerciseRecords();
+
+            // 刷新当前页面显示
+            this.loadMembers();
+            this.loadHealthRecords();
+            this.loadDietRecords();
+            this.loadExercises();
+            this.updateStats();
+
+            console.log('✅ 自动同步完成');
+        } catch (error) {
+            console.error('❌ 自动同步失败:', error);
+        }
     }
 
     // 绑定事件
@@ -1382,6 +1431,36 @@ class FamilyHealthApp {
         this.loadHealthRecords();
         this.updateStats();
         alert('✅ 健康记录已添加！');
+        
+        // 🔥 关键：立即同步到云端
+        this.syncHealthRecordToCloud(newRecord);
+    }
+
+    // 同步单条健康记录到云端
+    async syncHealthRecordToCloud(record) {
+        if (typeof supabaseClient === 'undefined' || !supabaseClient.isConnected) {
+            console.log('云同步未启用，跳过同步');
+            return;
+        }
+
+        try {
+            const cloudRecord = {
+                id: record.id,
+                member_id: record.memberId,
+                type: record.type,
+                value: record.value,
+                secondary_value: record.systolic || record.diastolic || null,
+                recorded_at: record.recordedAt ? record.recordedAt.split('T')[0] : new Date().toISOString().split('T')[0],
+                notes: record.notes,
+                created_at: record.createdAt,
+                updated_at: new Date().toISOString()
+            };
+
+            await supabaseClient.pushToCloud('health_records', cloudRecord, record.id);
+            console.log('✅ 健康记录已同步到云端');
+        } catch (error) {
+            console.error('❌ 健康记录同步失败:', error);
+        }
     }
 
     // 删除健康记录

@@ -1,0 +1,82 @@
+<!--首页-->
+<view class="container">
+  <view class="page-title">
+    <text>❤️ 家庭健康助手</text>
+  </view>
+
+  <!-- 成员选择 -->
+  <view class="card">
+    <view class="card-header">
+      <text class="card-title">👥 选择成员</text>
+    </view>
+    <view class="card-body">
+      <picker bindchange="onMemberChange" value="{{memberIndex}}" range="{{members}}" range-key="name">
+        <view class="form-input">
+          {{members[memberIndex]?.name || '请选择成员'}}
+        </view>
+      </picker>
+    </view>
+  </view>
+
+  <!-- 快速统计 -->
+  <view class="card" wx:if="{{currentMember}}">
+    <view class="card-header">
+      <text class="card-title">📊 今日统计</text>
+    </view>
+    <view class="card-body">
+      <view style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <view style="flex: 1; min-width: 100px; text-align: center; padding: 12px; background: #f0f3ff; border-radius: 8px;">
+          <view style="font-size: 20px; font-weight: 600; color: #667eea;">{{todayStats.healthCount}}</view>
+          <view style="font-size: 12px; color: #999; margin-top: 4px;">健康记录</view>
+        </view>
+        <view style="flex: 1; min-width: 100px; text-align: center; padding: 12px; background: #fff0f3; border-radius: 8px;">
+          <view style="font-size: 20px; font-weight: 600; color: #f44336;">{{todayStats.dietCount}}</view>
+          <view style="font-size: 12px; color: #999; margin-top: 4px;">饮食记录</view>
+        </view>
+        <view style="flex: 1; min-width: 100px; text-align: center; padding: 12px; background: #f3f5ff; border-radius: 8px;">
+          <view style="font-size: 20px; font-weight: 600; color: #4CAF50;">{{todayStats.exerciseCount}}</view>
+          <view style="font-size: 12px; color: #999; margin-top: 4px;">运动记录</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快速操作 -->
+  <view class="card">
+    <view class="card-header">
+      <text class="card-title">⚡ 快速操作</text>
+    </view>
+    <view class="card-body">
+      <view style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <button class="btn btn-primary" bindtap="goToHealth">
+          <text>➕ 添加健康记录</text>
+        </button>
+        <button class="btn btn-primary" bindtap="goDiet">
+          <text>🍽️ 添加饮食</text>
+        </button>
+        <button class="btn btn-primary" bindtap="goExercise">
+          <text>🏃 添加运动</text>
+        </button>
+        <button class="btn btn-primary" bindtap="goAI">
+          <text>🤖 AI问诊</text>
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 使用说明 -->
+  <view class="card">
+    <view class="card-header">
+      <text class="card-title">📖 使用说明</text>
+    </view>
+    <view class="card-body">
+      <view style="line-height: 1.8; font-size: 13px; color: #666;">
+        <view>1. 选择家庭成员</view>
+        <view>2. 记录健康指标、饮食、运动</view>
+        <view>3. 查看健康统计和趋势</view>
+        <view>4. 使用 AI 问诊获取健康建议</view>
+        <view style="margin-top: 8px; color: #999; font-size: 12px;">所有数据本地存储，安全可靠</view>
+      </view>
+    </view>
+  </view>
+</view>
