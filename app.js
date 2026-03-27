@@ -954,6 +954,30 @@ class FamilyHealthApp {
                             <small id="healthUnit"></small>
                         </div>
                         
+                        <!-- BMI 自动计算提示 -->
+                        <div id="bmiAutoCalcInfo" class="bmi-calc-info" style="display: none;">
+                            <p style="color: #667eea; font-weight: 500; margin-bottom: 10px;">
+                                💡 提示：输入身高和体重后，可自动计算 BMI
+                            </p>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="heightForBMI">身高 (cm)</label>
+                                    <input type="number" id="heightForBMI" class="form-control" step="0.1" placeholder="例：170">
+                                </div>
+                                <div class="form-group">
+                                    <label for="weightForBMI">体重 (kg)</label>
+                                    <input type="number" id="weightForBMI" class="form-control" step="0.1" placeholder="例：65">
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-secondary" id="calcBMIBtn" style="width: 100%; margin-top: 10px;">
+                                <i class="fas fa-calculator"></i> 计算 BMI
+                            </button>
+                            <div id="bmiResult" style="display: none; margin-top: 10px; padding: 10px; background: #f0f3ff; border-radius: 8px; text-align: center;">
+                                <p style="color: #667eea; font-weight: 600; font-size: 1.1rem;" id="bmiResultValue"></p>
+                                <p style="color: #999; font-size: 0.85rem;" id="bmiResultStatus"></p>
+                            </div>
+                        </div>
+                        
                         <!-- 正常值参考 -->
                         <div id="normalRangeInfo" class="normal-range-box" style="display: none;">
                             <h4>📊 年龄段正常值参考</h4>
@@ -988,6 +1012,9 @@ class FamilyHealthApp {
         const form = modal.querySelector('#healthForm');
         const healthTypeSelect = modal.querySelector('#healthType');
         const submitBtn = modal.querySelector('#submitHealthBtn');
+        const calcBMIBtn = modal.querySelector('#calcBMIBtn');
+        const heightForBMI = modal.querySelector('#heightForBMI');
+        const weightForBMI = modal.querySelector('#weightForBMI');
 
         const closeModal = () => {
             overlay.remove();
@@ -1007,9 +1034,11 @@ class FamilyHealthApp {
             const normalRangeInfo = modal.querySelector('#normalRangeInfo');
             const normalRangeContent = modal.querySelector('#normalRangeContent');
             const healthUnit = modal.querySelector('#healthUnit');
+            const bmiAutoCalcInfo = modal.querySelector('#bmiAutoCalcInfo');
             
             bpFields.style.display = type === 'blood_pressure' ? 'flex' : 'none';
-            otherFields.style.display = (type !== 'blood_pressure' && type !== '') ? 'block' : 'none';
+            otherFields.style.display = (type !== 'blood_pressure' && type !== '' && type !== 'bmi') ? 'block' : 'none';
+            bmiAutoCalcInfo.style.display = type === 'bmi' ? 'block' : 'none';
             
             // 显示正常值参考
             if (type && age) {
@@ -1023,6 +1052,140 @@ class FamilyHealthApp {
                 }
             } else {
                 normalRangeInfo.style.display = 'none';
+            }
+        });
+
+        // BMI 自动计算
+        calcBMIBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const height = parseFloat(heightForBMI.value);
+            const weight = parseFloat(weightForBMI.value);
+            
+            if (!height || !weight || height <= 0 || weight <= 0) {
+                alert('请输入有效的身高和体重！');
+                return;
+            }
+            
+            if (height < 50 || height > 250) {
+                alert('身高应在50-250cm之间！');
+                return;
+            }
+            
+            if (weight < 10 || weight > 300) {
+                alert('体重应在10-300kg之间！');
+                return;
+            }
+            
+            // 计算 BMI
+            const heightInMeters = height / 100;
+            const bmi = (weight / (heightInMeters * heightInMeters)).toFixed(1);
+            
+            // 判断 BMI 状态
+            let status = '';
+            let statusColor = '';
+            if (bmi < 18.5) {
+                status = '体重过低';
+                statusColor = '#ff9800';
+            } else if (bmi < 25) {
+                status = '正常体重';
+                statusColor = '#4CAF50';
+            } else if (bmi < 30) {
+                status = '超重';
+                statusColor = '#ff9800';
+            } else {
+                status = '肥胖';
+                statusColor = '#f44336';
+            }
+            
+            // 显示结果
+            const bmiResult = modal.querySelector('#bmiResult');
+            const bmiResultValue = modal.querySelector('#bmiResultValue');
+            const bmiResultStatus = modal.querySelector('#bmiResultStatus');
+            
+            bmiResultValue.textContent = `BMI: ${bmi}`;
+            bmiResultValue.style.color = statusColor;
+            bmiResultStatus.textContent = status;
+            bmiResult.style.display = 'block';
+            
+            // 自动填入 healthValue
+            const healthValue = modal.querySelector('#healthValue');
+            healthValue.value = bmi;
+        });
+
+        // 实时计算 BMI（可选）
+        heightForBMI.addEventListener('input', () => {
+            const height = parseFloat(heightForBMI.value);
+            const weight = parseFloat(weightForBMI.value);
+            
+            if (height > 0 && weight > 0) {
+                const heightInMeters = height / 100;
+                const bmi = (weight / (heightInMeters * heightInMeters)).toFixed(1);
+                
+                let status = '';
+                let statusColor = '';
+                if (bmi < 18.5) {
+                    status = '体重过低';
+                    statusColor = '#ff9800';
+                } else if (bmi < 25) {
+                    status = '正常体重';
+                    statusColor = '#4CAF50';
+                } else if (bmi < 30) {
+                    status = '超重';
+                    statusColor = '#ff9800';
+                } else {
+                    status = '肥胖';
+                    statusColor = '#f44336';
+                }
+                
+                const bmiResult = modal.querySelector('#bmiResult');
+                const bmiResultValue = modal.querySelector('#bmiResultValue');
+                const bmiResultStatus = modal.querySelector('#bmiResultStatus');
+                
+                bmiResultValue.textContent = `BMI: ${bmi}`;
+                bmiResultValue.style.color = statusColor;
+                bmiResultStatus.textContent = status;
+                bmiResult.style.display = 'block';
+                
+                const healthValue = modal.querySelector('#healthValue');
+                healthValue.value = bmi;
+            }
+        });
+
+        weightForBMI.addEventListener('input', () => {
+            const height = parseFloat(heightForBMI.value);
+            const weight = parseFloat(weightForBMI.value);
+            
+            if (height > 0 && weight > 0) {
+                const heightInMeters = height / 100;
+                const bmi = (weight / (heightInMeters * heightInMeters)).toFixed(1);
+                
+                let status = '';
+                let statusColor = '';
+                if (bmi < 18.5) {
+                    status = '体重过低';
+                    statusColor = '#ff9800';
+                } else if (bmi < 25) {
+                    status = '正常体重';
+                    statusColor = '#4CAF50';
+                } else if (bmi < 30) {
+                    status = '超重';
+                    statusColor = '#ff9800';
+                } else {
+                    status = '肥胖';
+                    statusColor = '#f44336';
+                }
+                
+                const bmiResult = modal.querySelector('#bmiResult');
+                const bmiResultValue = modal.querySelector('#bmiResultValue');
+                const bmiResultStatus = modal.querySelector('#bmiResultStatus');
+                
+                bmiResultValue.textContent = `BMI: ${bmi}`;
+                bmiResultValue.style.color = statusColor;
+                bmiResultStatus.textContent = status;
+                bmiResult.style.display = 'block';
+                
+                const healthValue = modal.querySelector('#healthValue');
+                healthValue.value = bmi;
             }
         });
 

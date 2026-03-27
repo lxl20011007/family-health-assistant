@@ -1710,3 +1710,12 @@ body {
 .normal-range-box strong {
     color: #1b5e20;
 }
+
+/* ==================== BMI 自动计算区域 ==================== */
+.bmi-calc-info {
+    background: linear-gradient(135deg, #f3e5f5 0%, #ede7f6 100%);
+    border: 2px solid #9c27b0;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 16px;
+}
