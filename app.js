@@ -24,6 +24,9 @@ class FamilyHealthApp {
 
     // 启动自动同步机制
     startAutoSync() {
+        // 🔥 关键：首次启用云同步时，上传所有本地数据
+        this.uploadAllLocalDataToCloud();
+
         // 每 30 秒检查一次是否需要同步
         setInterval(() => {
             this.autoSyncFromCloud();
@@ -42,6 +45,81 @@ class FamilyHealthApp {
                 this.autoSyncFromCloud();
             }
         });
+    }
+
+    // 上传所有本地数据到云端（首次同步）
+    async uploadAllLocalDataToCloud() {
+        if (typeof supabaseClient === 'undefined' || !supabaseClient.isConnected) {
+            return;
+        }
+
+        try {
+            console.log('🔄 开始上传所有本地数据到云端...');
+
+            // 上传家庭成员
+            const members = this.getMembers();
+            for (const member of members) {
+                await this.syncMemberToCloud(member, 'create');
+            }
+
+            // 上传健康记录
+            const healthRecords = this.getHealthRecords();
+            for (const record of healthRecords) {
+                await this.syncHealthRecordToCloud(record);
+            }
+
+            // 上传饮食记录
+            const dietRecords = this.getDietRecords();
+            for (const record of dietRecords) {
+                await this.syncDietRecordToCloud(record);
+            }
+
+            // 上传运动记录
+            const exercises = this.getExercises();
+            for (const exercise of exercises) {
+                await this.syncExerciseToCloud(exercise);
+            }
+
+            // 上传用药提醒
+            const medications = this.getMedications();
+            for (const medication of medications) {
+                await this.syncMedicationToCloud(medication);
+            }
+
+            console.log('✅ 所有本地数据已上传到云端');
+        } catch (error) {
+            console.error('❌ 上传本地数据失败:', error);
+        }
+    }
+
+    // 同步饮食记录到云端
+    async syncDietRecordToCloud(record) {
+        if (typeof supabaseClient === 'undefined' || !supabaseClient.isConnected) {
+            return;
+        }
+
+        try {
+            const cloudRecord = {
+                id: record.id,
+                member_id: record.memberId,
+                meal_type: record.mealType,
+                date: record.date,
+                food_name: record.foodName,
+                quantity: record.quantity,
+                unit: record.unit,
+                calories: record.nutrition?.calories,
+                protein: record.nutrition?.protein,
+                fat: record.nutrition?.fat,
+                carbs: record.nutrition?.carbs,
+                fiber: record.nutrition?.fiber,
+                created_at: record.createdAt,
+                updated_at: new Date().toISOString()
+            };
+
+            await supabaseClient.pushToCloud('diet_records', cloudRecord, record.id);
+        } catch (error) {
+            console.error('❌ 饮食记录同步失败:', error);
+        }
     }
 
     // 自动从云端同步数据
@@ -271,6 +349,24 @@ class FamilyHealthApp {
         
         this.updateStats();
         this.loadDietRecords();
+
+        // 🔥 关键：同步删除到云端
+        this.deleteDietRecordFromCloud(recordId);
+    }
+
+    // 从云端删除饮食记录
+    async deleteDietRecordFromCloud(recordId) {
+        if (typeof supabaseClient === 'undefined' || !supabaseClient.isConnected) {
+            console.log('云同步未启用，跳过删除');
+            return;
+        }
+
+        try {
+            await supabaseClient.deleteFromCloud('diet_records', recordId);
+            console.log('✅ 饮食记录已从云端删除');
+        } catch (error) {
+            console.error('❌ 饮食记录删除失败:', error);
+        }
     }
 
     // 计算每日营养汇总
@@ -756,16 +852,20 @@ class FamilyHealthApp {
         }
 
         const members = this.getMembers();
+        let newMember = null;
+        let action = 'create';
         
         if (memberId) {
             // 更新现有成员
             const index = members.findIndex(m => m.id === memberId);
             if (index !== -1) {
                 members[index] = { ...members[index], name, gender, birthDate, notes };
+                newMember = members[index];
+                action = 'update';
             }
         } else {
             // 添加新成员
-            const newMember = {
+            newMember = {
                 id: Date.now().toString(),
                 name,
                 gender,
@@ -782,8 +882,41 @@ class FamilyHealthApp {
         this.updateMemberSelect();
         this.updateStats();
         
+        // 🔥 关键：立即同步到云端
+        this.syncMemberToCloud(newMember, action);
+        
         // 切换到成员管理标签页
         this.switchTab('members');
+    }
+
+    // 同步成员到云端
+    async syncMemberToCloud(member, action = 'create') {
+        if (typeof supabaseClient === 'undefined' || !supabaseClient.isConnected) {
+            console.log('云同步未启用，跳过同步');
+            return;
+        }
+
+        try {
+            const cloudMember = {
+                id: member.id,
+                name: member.name,
+                gender: member.gender,
+                birth_date: member.birthDate,
+                notes: member.notes,
+                created_at: member.createdAt || new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+
+            if (action === 'create') {
+                await supabaseClient.pushToCloud('family_members', cloudMember, member.id);
+                console.log('✅ 家庭成员已同步到云端');
+            } else if (action === 'update') {
+                await supabaseClient.pushToCloud('family_members', cloudMember, member.id);
+                console.log('✅ 家庭成员已更新到云端');
+            }
+        } catch (error) {
+            console.error('❌ 家庭成员同步失败:', error);
+        }
     }
 
     // 删除成员
@@ -823,6 +956,24 @@ class FamilyHealthApp {
         this.loadMedications();
         this.loadExercises();
         this.updateStats();
+
+        // 🔥 关键：同步删除到云端
+        this.deleteMemberFromCloud(memberId);
+    }
+
+    // 从云端删除成员
+    async deleteMemberFromCloud(memberId) {
+        if (typeof supabaseClient === 'undefined' || !supabaseClient.isConnected) {
+            console.log('云同步未启用，跳过删除');
+            return;
+        }
+
+        try {
+            await supabaseClient.deleteFromCloud('family_members', memberId);
+            console.log('✅ 家庭成员已从云端删除');
+        } catch (error) {
+            console.error('❌ 家庭成员删除失败:', error);
+        }
     }
 
     // 健康记录相关方法
@@ -1474,6 +1625,24 @@ class FamilyHealthApp {
         this.saveHealthRecords(records);
         this.loadHealthRecords();
         this.updateStats();
+
+        // 🔥 关键：同步删除到云端
+        this.deleteHealthRecordFromCloud(recordId);
+    }
+
+    // 从云端删除健康记录
+    async deleteHealthRecordFromCloud(recordId) {
+        if (typeof supabaseClient === 'undefined' || !supabaseClient.isConnected) {
+            console.log('云同步未启用，跳过删除');
+            return;
+        }
+
+        try {
+            await supabaseClient.deleteFromCloud('health_records', recordId);
+            console.log('✅ 健康记录已从云端删除');
+        } catch (error) {
+            console.error('❌ 健康记录删除失败:', error);
+        }
     }
 
     // 用药提醒相关方法
@@ -1698,6 +1867,36 @@ class FamilyHealthApp {
         this.saveMedications(medications);
         this.loadMedications();
         this.updateStats();
+
+        // 🔥 关键：立即同步到云端
+        this.syncMedicationToCloud(newMedication);
+    }
+
+    // 同步用药提醒到云端
+    async syncMedicationToCloud(medication) {
+        if (typeof supabaseClient === 'undefined' || !supabaseClient.isConnected) {
+            console.log('云同步未启用，跳过同步');
+            return;
+        }
+
+        try {
+            const cloudRecord = {
+                id: medication.id,
+                member_id: medication.memberId,
+                name: medication.name,
+                dosage: medication.dosage,
+                times: medication.times.join(','),
+                notes: medication.notes,
+                active: medication.active,
+                created_at: medication.createdAt,
+                updated_at: new Date().toISOString()
+            };
+
+            await supabaseClient.pushToCloud('medications', cloudRecord, medication.id);
+            console.log('✅ 用药提醒已同步到云端');
+        } catch (error) {
+            console.error('❌ 用药提醒同步失败:', error);
+        }
     }
 
     // 切换用药提醒状态
@@ -1709,6 +1908,36 @@ class FamilyHealthApp {
             medications[index].active = !medications[index].active;
             this.saveMedications(medications);
             this.loadMedications();
+
+            // 🔥 关键：同步状态变化到云端
+            this.syncMedicationStatusToCloud(medications[index]);
+        }
+    }
+
+    // 同步用药提醒状态到云端
+    async syncMedicationStatusToCloud(medication) {
+        if (typeof supabaseClient === 'undefined' || !supabaseClient.isConnected) {
+            console.log('云同步未启用，跳过同步');
+            return;
+        }
+
+        try {
+            const cloudRecord = {
+                id: medication.id,
+                member_id: medication.memberId,
+                name: medication.name,
+                dosage: medication.dosage,
+                times: medication.times.join(','),
+                notes: medication.notes,
+                active: medication.active,
+                created_at: medication.createdAt,
+                updated_at: new Date().toISOString()
+            };
+
+            await supabaseClient.pushToCloud('medications', cloudRecord, medication.id);
+            console.log('✅ 用药提醒状态已同步到云端');
+        } catch (error) {
+            console.error('❌ 用药提醒状态同步失败:', error);
         }
     }
 
@@ -1723,6 +1952,24 @@ class FamilyHealthApp {
         this.saveMedications(medications);
         this.loadMedications();
         this.updateStats();
+
+        // 🔥 关键：同步删除到云端
+        this.deleteMedicationFromCloud(medicationId);
+    }
+
+    // 从云端删除用药提醒
+    async deleteMedicationFromCloud(medicationId) {
+        if (typeof supabaseClient === 'undefined' || !supabaseClient.isConnected) {
+            console.log('云同步未启用，跳过删除');
+            return;
+        }
+
+        try {
+            await supabaseClient.deleteFromCloud('medications', medicationId);
+            console.log('✅ 用药提醒已从云端删除');
+        } catch (error) {
+            console.error('❌ 用药提醒删除失败:', error);
+        }
     }
 
     // 检查用药提醒
@@ -2500,8 +2747,39 @@ class FamilyHealthApp {
             this.loadExercises();
             this.updateStats();
 
+            // 🔥 关键：立即同步到云端
+            this.syncExerciseToCloud(newExercise);
+
             closeModal();
         });
+    }
+
+    // 同步运动记录到云端
+    async syncExerciseToCloud(exercise) {
+        if (typeof supabaseClient === 'undefined' || !supabaseClient.isConnected) {
+            console.log('云同步未启用，跳过同步');
+            return;
+        }
+
+        try {
+            const cloudRecord = {
+                id: exercise.id,
+                member_id: exercise.memberId,
+                type: exercise.type,
+                duration: exercise.duration,
+                exercise_date: exercise.exerciseDate,
+                time: exercise.time,
+                calories_burned: exercise.caloriesBurned,
+                notes: exercise.notes,
+                created_at: exercise.createdAt,
+                updated_at: new Date().toISOString()
+            };
+
+            await supabaseClient.pushToCloud('exercise_records', cloudRecord, exercise.id);
+            console.log('✅ 运动记录已同步到云端');
+        } catch (error) {
+            console.error('❌ 运动记录同步失败:', error);
+        }
     }
 
     // 删除运动记录
@@ -2515,6 +2793,24 @@ class FamilyHealthApp {
         this.saveExercises(exercises);
         this.loadExercises();
         this.updateStats();
+
+        // 🔥 关键：同步删除到云端
+        this.deleteExerciseFromCloud(exerciseId);
+    }
+
+    // 从云端删除运动记录
+    async deleteExerciseFromCloud(exerciseId) {
+        if (typeof supabaseClient === 'undefined' || !supabaseClient.isConnected) {
+            console.log('云同步未启用，跳过删除');
+            return;
+        }
+
+        try {
+            await supabaseClient.deleteFromCloud('exercise_records', exerciseId);
+            console.log('✅ 运动记录已从云端删除');
+        } catch (error) {
+            console.error('❌ 运动记录删除失败:', error);
+        }
     }
 
     // 统计相关方法

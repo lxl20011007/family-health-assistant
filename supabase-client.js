@@ -191,6 +191,31 @@ class SupabaseClient {
     }
 
     /**
+     * 从云端删除数据
+     */
+    async deleteFromCloud(table, recordId) {
+        if (!this.supabase || !this.isOnline) {
+            // 加入同步队列稍后重试
+            this.syncQueue.push({ action: 'delete', table, recordId });
+            return { queued: true };
+        }
+
+        try {
+            const { error } = await this.supabase
+                .from(table)
+                .delete()
+                .eq('id', recordId);
+
+            if (error) throw error;
+            return { success: true };
+        } catch (error) {
+            console.error(`Supabase: 删除${table}失败`, error);
+            this.syncQueue.push({ action: 'delete', table, recordId });
+            return { error: error.message };
+        }
+    }
+
+    /**
      * 从云端拉取数据
      */
     async pullFromCloud(table, lastSyncTime = null) {
