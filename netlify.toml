@@ -1,0 +1,54 @@
+# Netlify 配置文件
+# 家庭健康助手应用
+
+[build]
+# 不需要构建步骤，直接部署静态文件
+publish = "."
+command = ""
+
+# 缓存配置
+[build.cache]
+# 缓存 node_modules（如果有的话）
+cacheDirectories = ["node_modules"]
+
+# 重定向规则
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
+
+# 自定义响应头
+[[headers]]
+for = "/*"
+[headers.values]
+# 启用缓存，减少带宽消耗
+Cache-Control = "public, max-age=3600"
+
+[[headers]]
+for = "*.js"
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+for = "*.css"
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+for = "*.html"
+[headers.values]
+Cache-Control = "public, max-age=3600"
+
+# 性能优化
+[context.production]
+command = ""
+publish = "."
+
+# 预览环境
+[context.deploy-preview]
+command = ""
+publish = "."
+
+[context.branch-deploy]
+command = ""
+publish = "."
