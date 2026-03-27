@@ -826,32 +826,54 @@ class FamilyHealthApp {
         
         let valueDisplay = '';
         let typeClass = '';
+        let icon = '❤️';
         
         switch (record.type) {
             case 'blood_pressure':
                 valueDisplay = `${record.systolic}/${record.diastolic} mmHg`;
                 typeClass = 'blood-pressure';
+                icon = '🩸';
                 break;
             case 'blood_sugar':
                 valueDisplay = `${record.value} mmol/L`;
                 typeClass = 'blood-sugar';
+                icon = '🍬';
                 break;
             case 'heart_rate':
                 valueDisplay = `${record.value} 次/分`;
                 typeClass = 'heart-rate';
+                icon = '💓';
+                break;
+            case 'height':
+                valueDisplay = `${record.value} cm`;
+                typeClass = 'height';
+                icon = '📏';
+                break;
+            case 'weight':
+                valueDisplay = `${record.value} kg`;
+                typeClass = 'weight';
+                icon = '⚖️';
+                break;
+            case 'bmi':
+                valueDisplay = `${record.value} kg/m²`;
+                typeClass = 'bmi';
+                icon = '📊';
                 break;
         }
 
         const typeText = {
             blood_pressure: '血压',
             blood_sugar: '血糖',
-            heart_rate: '心率'
+            heart_rate: '心率',
+            height: '身高',
+            weight: '体重',
+            bmi: 'BMI'
         }[record.type];
 
         card.innerHTML = `
             <div class="card-header">
                 <div class="card-title">
-                    <i class="fas fa-heart"></i> ${typeText}记录
+                    <span style="font-size: 1.2rem;">${icon}</span> ${typeText}记录
                 </div>
                 <div class="card-actions">
                     <button class="btn btn-danger btn-sm delete-health" data-id="${record.id}">
@@ -884,6 +906,9 @@ class FamilyHealthApp {
             return;
         }
 
+        const member = this.getMembers().find(m => m.id === this.currentMemberId);
+        const age = member ? this.calculateAge(member.birthDate) : null;
+
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.innerHTML = `
@@ -892,49 +917,62 @@ class FamilyHealthApp {
                     <h3 class="modal-title">添加健康记录</h3>
                     <button class="close-btn">&times;</button>
                 </div>
-                <form id="healthForm">
-                    <div class="form-group">
-                        <label for="healthType">记录类型 *</label>
-                        <select id="healthType" class="form-control" required>
-                            <option value="">请选择</option>
-                            <option value="blood_pressure">血压</option>
-                            <option value="blood_sugar">血糖</option>
-                            <option value="heart_rate">心率</option>
-                        </select>
-                    </div>
-                    
-                    <div id="bloodPressureFields" class="form-row" style="display: none;">
+                <div class="modal-body">
+                    <form id="healthForm">
                         <div class="form-group">
-                            <label for="systolic">收缩压 (mmHg) *</label>
-                            <input type="number" id="systolic" class="form-control" min="50" max="250">
+                            <label for="healthType">记录类型 *</label>
+                            <select id="healthType" class="form-control" required>
+                                <option value="">请选择</option>
+                                <option value="blood_pressure">血压</option>
+                                <option value="blood_sugar">血糖</option>
+                                <option value="heart_rate">心率</option>
+                                <option value="height">身高</option>
+                                <option value="weight">体重</option>
+                                <option value="bmi">BMI</option>
+                            </select>
                         </div>
+                        
+                        <!-- 血压字段 -->
+                        <div id="bloodPressureFields" class="form-row" style="display: none;">
+                            <div class="form-group">
+                                <label for="systolic">收缩压 (mmHg) *</label>
+                                <input type="number" id="systolic" class="form-control" min="50" max="250">
+                            </div>
+                            <div class="form-group">
+                                <label for="diastolic">舒张压 (mmHg) *</label>
+                                <input type="number" id="diastolic" class="form-control" min="30" max="150">
+                            </div>
+                        </div>
+                        
+                        <!-- 其他单值字段 -->
+                        <div id="otherHealthFields" class="form-group" style="display: none;">
+                            <label for="healthValue">数值 *</label>
+                            <input type="number" id="healthValue" class="form-control" step="0.1">
+                            <small id="healthUnit"></small>
+                        </div>
+                        
+                        <!-- 正常值参考 -->
+                        <div id="normalRangeInfo" class="normal-range-box" style="display: none;">
+                            <h4>📊 年龄段正常值参考</h4>
+                            <div id="normalRangeContent"></div>
+                        </div>
+                        
                         <div class="form-group">
-                            <label for="diastolic">舒张压 (mmHg) *</label>
-                            <input type="number" id="diastolic" class="form-control" min="30" max="150">
+                            <label for="healthNotes">备注</label>
+                            <textarea id="healthNotes" class="form-control" rows="2"></textarea>
                         </div>
-                    </div>
-                    
-                    <div id="otherHealthFields" class="form-group" style="display: none;">
-                        <label for="healthValue">数值 *</label>
-                        <input type="number" id="healthValue" class="form-control" step="0.1">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="healthNotes">备注</label>
-                        <textarea id="healthNotes" class="form-control" rows="3"></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="recordedAt">记录时间</label>
-                        <input type="datetime-local" id="recordedAt" class="form-control" 
-                               value="${new Date().toISOString().slice(0, 16)}">
-                    </div>
-                    
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-secondary close-modal">取消</button>
-                        <button type="submit" class="btn btn-primary">添加记录</button>
-                    </div>
-                </form>
+                        
+                        <div class="form-group">
+                            <label for="recordedAt">记录时间</label>
+                            <input type="datetime-local" id="recordedAt" class="form-control" 
+                                   value="${new Date().toISOString().slice(0, 16)}">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary close-modal">取消</button>
+                    <button type="submit" class="btn btn-primary" id="submitHealthBtn">添加记录</button>
+                </div>
             </div>
         `;
 
@@ -945,6 +983,7 @@ class FamilyHealthApp {
         const closeModalBtn = modal.querySelector('.close-modal');
         const form = modal.querySelector('#healthForm');
         const healthTypeSelect = modal.querySelector('#healthType');
+        const submitBtn = modal.querySelector('#submitHealthBtn');
 
         const closeModal = () => {
             modal.remove();
@@ -956,21 +995,124 @@ class FamilyHealthApp {
             if (e.target === modal) closeModal();
         });
 
-        // 根据类型显示不同的输入字段
+        // 根据类型显示不同的输入字段和正常值
         healthTypeSelect.addEventListener('change', (e) => {
             const type = e.target.value;
             const bpFields = modal.querySelector('#bloodPressureFields');
             const otherFields = modal.querySelector('#otherHealthFields');
+            const normalRangeInfo = modal.querySelector('#normalRangeInfo');
+            const normalRangeContent = modal.querySelector('#normalRangeContent');
+            const healthUnit = modal.querySelector('#healthUnit');
             
             bpFields.style.display = type === 'blood_pressure' ? 'flex' : 'none';
-            otherFields.style.display = type !== 'blood_pressure' ? 'block' : 'none';
+            otherFields.style.display = (type !== 'blood_pressure' && type !== '') ? 'block' : 'none';
+            
+            // 显示正常值参考
+            if (type && age) {
+                const normalRange = this.getNormalHealthRange(type, age);
+                if (normalRange) {
+                    normalRangeInfo.style.display = 'block';
+                    normalRangeContent.innerHTML = normalRange.html;
+                    healthUnit.textContent = normalRange.unit || '';
+                } else {
+                    normalRangeInfo.style.display = 'none';
+                }
+            } else {
+                normalRangeInfo.style.display = 'none';
+            }
         });
 
-        form.addEventListener('submit', (e) => {
+        submitBtn.addEventListener('click', (e) => {
             e.preventDefault();
             this.saveHealthRecord();
             closeModal();
         });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+        });
+    }
+
+    // 计算年龄
+    calculateAge(birthDate) {
+        const today = new Date();
+        const birth = new Date(birthDate);
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
+        
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+        
+        return age;
+    }
+
+    // 获取年龄段的正常值范围
+    getNormalHealthRange(type, age) {
+        const ranges = {
+            blood_pressure: {
+                unit: 'mmHg',
+                html: `
+                    <p><strong>收缩压：</strong>90-120 mmHg</p>
+                    <p><strong>舒张压：</strong>60-80 mmHg</p>
+                    <p style="font-size: 0.85rem; color: #666;">正常血压对所有年龄段基本相同</p>
+                `
+            },
+            blood_sugar: {
+                unit: 'mmol/L',
+                html: `
+                    <p><strong>空腹血糖：</strong>3.9-6.1 mmol/L</p>
+                    <p><strong>餐后2小时：</strong>&lt;7.8 mmol/L</p>
+                    <p style="font-size: 0.85rem; color: #666;">正常血糖对所有年龄段基本相同</p>
+                `
+            },
+            heart_rate: {
+                unit: '次/分',
+                html: this.getHeartRateRange(age)
+            },
+            height: {
+                unit: 'cm',
+                html: `<p style="font-size: 0.85rem; color: #666;">身高因人而异，无统一标准</p>`
+            },
+            weight: {
+                unit: 'kg',
+                html: `<p style="font-size: 0.85rem; color: #666;">体重因人而异，建议结合BMI评估</p>`
+            },
+            bmi: {
+                unit: 'kg/m²',
+                html: `
+                    <p><strong>体重过低：</strong>&lt;18.5</p>
+                    <p><strong>正常体重：</strong>18.5-24.9</p>
+                    <p><strong>超重：</strong>25.0-29.9</p>
+                    <p><strong>肥胖：</strong>≥30.0</p>
+                `
+            }
+        };
+        
+        return ranges[type] || null;
+    }
+
+    // 获取心率正常范围（根据年龄）
+    getHeartRateRange(age) {
+        let range = '';
+        
+        if (age < 1) {
+            range = '100-160 次/分';
+        } else if (age < 3) {
+            range = '80-130 次/分';
+        } else if (age < 6) {
+            range = '70-110 次/分';
+        } else if (age < 12) {
+            range = '60-100 次/分';
+        } else if (age < 18) {
+            range = '55-100 次/分';
+        } else if (age < 60) {
+            range = '60-100 次/分';
+        } else {
+            range = '60-100 次/分（可能偏低）';
+        }
+        
+        return `<p><strong>正常心率：</strong>${range}</p>`;
     }
 
     // 保存健康记录
@@ -989,14 +1131,15 @@ class FamilyHealthApp {
                 alert('请输入有效的血压值！');
                 return;
             }
-        } else {
+        } else if (type) {
             value = parseFloat(document.getElementById('healthValue').value);
             
-            if (!value) {
+            if (!value || value <= 0) {
                 alert('请输入有效的数值！');
                 return;
             }
             
+            // 验证各类型的数值范围
             if (type === 'blood_sugar' && (value < 1 || value > 30)) {
                 alert('血糖值应在1-30 mmol/L之间！');
                 return;
@@ -1004,6 +1147,21 @@ class FamilyHealthApp {
             
             if (type === 'heart_rate' && (value < 30 || value > 200)) {
                 alert('心率值应在30-200次/分之间！');
+                return;
+            }
+            
+            if (type === 'height' && (value < 50 || value > 250)) {
+                alert('身高应在50-250cm之间！');
+                return;
+            }
+            
+            if (type === 'weight' && (value < 10 || value > 300)) {
+                alert('体重应在10-300kg之间！');
+                return;
+            }
+            
+            if (type === 'bmi' && (value < 10 || value > 60)) {
+                alert('BMI应在10-60之间！');
                 return;
             }
         }
@@ -1025,6 +1183,7 @@ class FamilyHealthApp {
         this.saveHealthRecords(records);
         this.loadHealthRecords();
         this.updateStats();
+        alert('✅ 健康记录已添加！');
     }
 
     // 删除健康记录
