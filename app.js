@@ -188,6 +188,12 @@ class FamilyHealthApp {
             cloudSyncBtn.addEventListener('click', () => this.showCloudSyncModal());
         }
 
+        // 清空数据按钮
+        const clearAllDataBtn = document.getElementById('clearAllDataBtn');
+        if (clearAllDataBtn) {
+            clearAllDataBtn.addEventListener('click', () => this.showClearDataModal());
+        }
+
         // 健康记录筛选
         document.getElementById('healthFilter').addEventListener('change', () => this.loadHealthRecords());
         
@@ -3059,6 +3065,154 @@ class FamilyHealthApp {
             console.log('云同步完成');
         } catch (error) {
             console.error('云同步失败:', error);
+        }
+    }
+
+    // 显示清空数据确认模态框
+    showClearDataModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay active';
+        
+        const content = document.createElement('div');
+        content.className = 'modal';
+        content.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">⚠️ 清空所有数据</h3>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                        <p style="color: #856404; margin: 0; font-weight: 500;">
+                            ⚠️ 警告：此操作不可撤销！
+                        </p>
+                    </div>
+                    <p style="color: #555; line-height: 1.6; margin-bottom: 16px;">
+                        你即将删除以下所有数据：
+                    </p>
+                    <ul style="color: #666; margin-bottom: 16px; padding-left: 20px;">
+                        <li>所有家庭成员信息</li>
+                        <li>所有健康记录</li>
+                        <li>所有饮食记录</li>
+                        <li>所有运动记录</li>
+                        <li>所有用药提醒</li>
+                    </ul>
+                    <p style="color: #d32f2f; font-weight: 500; margin-bottom: 16px;">
+                        本地和云端的数据都会被删除！
+                    </p>
+                    <div class="form-group">
+                        <label style="color: #555; font-weight: 500;">
+                            <input type="checkbox" id="confirmDelete" style="margin-right: 8px;">
+                            我已确认，要删除所有数据
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary close-modal">取消</button>
+                    <button type="button" class="btn btn-danger" id="confirmClearBtn" disabled>
+                        确认删除所有数据
+                    </button>
+                </div>
+            </div>
+        `;
+
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+
+        const closeBtn = content.querySelector('.close-btn');
+        const closeModalBtn = content.querySelector('.close-modal');
+        const confirmCheckbox = content.querySelector('#confirmDelete');
+        const confirmBtn = content.querySelector('#confirmClearBtn');
+
+        const closeModal = () => {
+            modal.remove();
+        };
+
+        closeBtn.addEventListener('click', closeModal);
+        closeModalBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        // 只有勾选了确认框才能点击删除按钮
+        confirmCheckbox.addEventListener('change', (e) => {
+            confirmBtn.disabled = !e.target.checked;
+        });
+
+        confirmBtn.addEventListener('click', async () => {
+            await this.clearAllData();
+            closeModal();
+        });
+    }
+
+    // 清空所有数据
+    async clearAllData() {
+        try {
+            console.log('🗑️ 开始清空所有数据...');
+
+            // 清空本地数据
+            localStorage.removeItem('members');
+            localStorage.removeItem('health_records');
+            localStorage.removeItem('diet_records');
+            localStorage.removeItem('exercises');
+            localStorage.removeItem('medications');
+
+            console.log('✅ 本地数据已清空');
+
+            // 清空云端数据
+            if (typeof supabaseClient !== 'undefined' && supabaseClient.isConnected) {
+                await this.clearCloudData();
+            }
+
+            // 重置应用状态
+            this.currentMemberId = null;
+            this.loadMembers();
+            this.loadHealthRecords();
+            this.loadDietRecords();
+            this.loadExercises();
+            this.loadMedications();
+            this.updateStats();
+
+            alert('✅ 所有数据已成功清空！');
+            console.log('✅ 所有数据清空完成');
+        } catch (error) {
+            console.error('❌ 清空数据失败:', error);
+            alert('❌ 清空数据失败，请重试');
+        }
+    }
+
+    // 清空云端数据
+    async clearCloudData() {
+        if (typeof supabaseClient === 'undefined' || !supabaseClient.isConnected) {
+            return;
+        }
+
+        try {
+            console.log('🗑️ 开始清空云端数据...');
+
+            // 删除所有表中的数据
+            const tables = ['family_members', 'health_records', 'diet_records', 'exercise_records', 'medications'];
+
+            for (const table of tables) {
+                try {
+                    const { error } = await supabaseClient.supabase
+                        .from(table)
+                        .delete()
+                        .neq('id', ''); // 删除所有行
+
+                    if (error) {
+                        console.warn(`⚠️ 删除${table}失败:`, error);
+                    } else {
+                        console.log(`✅ ${table}已清空`);
+                    }
+                } catch (err) {
+                    console.warn(`⚠️ 删除${table}异常:`, err);
+                }
+            }
+
+            console.log('✅ 云端数据已清空');
+        } catch (error) {
+            console.error('❌ 清空云端数据失败:', error);
         }
     }
 
