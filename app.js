@@ -2,6 +2,8 @@
 class FamilyHealthApp {
     constructor() {
         this.currentMemberId = null;
+        this.authManager = null;
+        this.familyManager = null;
         this.init();
     }
 
@@ -20,6 +22,93 @@ class FamilyHealthApp {
         
         // 🔥 关键：启动自动同步机制
         this.startAutoSync();
+        
+        // 初始化认证管理器
+        this.initAuth();
+    }
+    
+    // 初始化认证管理器
+    initAuth() {
+        // 等待 DOM 和 supabaseClient 加载完成
+        if (typeof AuthManager !== 'undefined') {
+            this.authManager = new AuthManager(this);
+            console.log('App: 认证管理器已初始化');
+        } else {
+            console.warn('App: AuthManager 未加载');
+        }
+    }
+    
+    // 初始化家庭管理器
+    initFamilyManager() {
+        if (typeof FamilyManager !== 'undefined') {
+            this.familyManager = new FamilyManager(this);
+            console.log('App: 家庭管理器已初始化');
+        } else {
+            console.warn('App: FamilyManager 未加载');
+        }
+    }
+    
+    // 用户登录成功回调
+    onUserAuthenticated() {
+        console.log('App: 用户已登录');
+        this.updateUIForAuthenticatedUser();
+        
+        // 初始化家庭管理器
+        this.initFamilyManager();
+        
+        // 更新家庭按钮状态
+        if (this.familyManager) {
+            this.familyManager.onUserAuthenticated();
+        }
+    }
+    
+    // 用户退出登录回调
+    onUserSignedOut() {
+        console.log('App: 用户已退出');
+        this.updateUIForUnauthenticatedUser();
+        
+        // 更新家庭按钮状态
+        if (this.familyManager) {
+            this.familyManager.onUserSignedOut();
+        }
+    }
+    
+    // 启用本地模式（未登录时）
+    enableLocalMode() {
+        console.log('App: 启用本地模式');
+        // 本地模式下仍然可以使用应用，数据保存在 localStorage
+    }
+    
+    // 开始云同步
+    startCloudSync() {
+        console.log('App: 开始云同步');
+        this.uploadAllLocalDataToCloud();
+    }
+    
+    // 加入家庭后的回调
+    onFamilyJoined() {
+        console.log('App: 已加入家庭，开始同步数据');
+        this.uploadAllLocalDataToCloud();
+        this.loadMembers();
+    }
+    
+    // 退出家庭后的回调
+    onFamilyLeft() {
+        console.log('App: 已退出家庭');
+        // 清空界面数据
+        this.currentMemberId = null;
+        this.loadMembers();
+    }
+    
+    // 更新已登录用户的 UI
+    updateUIForAuthenticatedUser() {
+        // 可以在这里显示用户专属功能
+        console.log('App: 更新已认证用户 UI');
+    }
+    
+    // 更新未登录用户的 UI
+    updateUIForUnauthenticatedUser() {
+        console.log('App: 更新未认证用户 UI');
     }
 
     // 启动自动同步机制

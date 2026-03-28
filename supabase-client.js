@@ -1,15 +1,19 @@
 /**
  * Supabase云同步客户端
  * 为家庭健康助手应用提供云数据同步功能
+ * 支持：用户认证、数据同步、实时订阅
  */
 
 class SupabaseClient {
     constructor() {
         this.supabase = null;
         this.isConnected = false;
+        this.isAuthenticated = false;
+        this.currentUser = null;
         this.config = this.loadConfig();
         this.syncQueue = [];
         this.isOnline = navigator.onLine;
+        this.authListeners = [];
         this.initialize();
         this.setupEventListeners();
     }
@@ -168,6 +172,7 @@ class SupabaseClient {
 
     /**
      * 将本地数据推送到云端
+     * 自动添加 family_id（如果用户已加入家庭）
      */
     async pushToCloud(table, record, localId) {
         if (!this.supabase || !this.isOnline) {
@@ -177,9 +182,16 @@ class SupabaseClient {
         }
 
         try {
+            // 如果用户有家庭，自动添加 family_id
+            let cloudRecord = { ...record };
+            if (this.currentFamily?.id) {
+                cloudRecord.family_id = this.currentFamily.id;
+            }
+            cloudRecord.updated_at = new Date().toISOString();
+
             const { data, error } = await this.supabase
                 .from(table)
-                .upsert(record, { onConflict: 'id' });
+                .upsert(cloudRecord, { onConflict: 'id' });
 
             if (error) throw error;
             return { success: true, cloudId: data[0]?.id };
@@ -217,12 +229,19 @@ class SupabaseClient {
 
     /**
      * 从云端拉取数据
+     * 自动按 family_id 过滤（如果用户已加入家庭）
      */
     async pullFromCloud(table, lastSyncTime = null) {
         if (!this.supabase || !this.isOnline) return { offline: true };
 
         try {
             let query = this.supabase.from(table).select('*');
+            
+            // 如果用户有家庭，按 family_id 过滤
+            if (this.currentFamily?.id) {
+                query = query.eq('family_id', this.currentFamily.id);
+            }
+            
             if (lastSyncTime) {
                 query = query.gt('updated_at', lastSyncTime);
             }
@@ -286,10 +305,595 @@ class SupabaseClient {
             }
         }
     }
+
+    // ==================== 用户认证方法 ====================
+
+    /**
+     * 注册新用户
+     */
+    async signUp(email, password) {
+        if (!this.supabase) {
+            return { success: false, error: 'Supabase 未初始化' };
+        }
+
+        try {
+            const { data, error } = await this.supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    emailRedirectTo: window.location.origin
+                }
+            });
+
+            if (error) throw error;
+
+            console.log('Supabase: 注册成功，请检查邮箱验证');
+            return { 
+                success: true, 
+                message: '注册成功！请检查邮箱完成验证',
+                user: data.user 
+            };
+        } catch (error) {
+            console.error('Supabase: 注册失败', error);
+            return { 
+                success: false, 
+                error: this.translateAuthError(error.message) 
+            };
+        }
+    }
+
+    /**
+     * 用户登录
+     */
+    async signIn(email, password) {
+        if (!this.supabase) {
+            return { success: false, error: 'Supabase 未初始化' };
+        }
+
+        try {
+            const { data, error } = await this.supabase.auth.signInWithPassword({
+                email,
+                password
+            });
+
+            if (error) throw error;
+
+            this.isAuthenticated = true;
+            this.currentUser = data.user;
+            console.log('Supabase: 登录成功', data.user.email);
+            
+            // 通知监听器
+            this.notifyAuthListeners('SIGNED_IN', data.user);
+            
+            return { success: true, user: data.user };
+        } catch (error) {
+            console.error('Supabase: 登录失败', error);
+            return { 
+                success: false, 
+                error: this.translateAuthError(error.message) 
+            };
+        }
+    }
+
+    /**
+     * 用户退出登录
+     */
+    async signOut() {
+        if (!this.supabase) {
+            return { success: false, error: 'Supabase 未初始化' };
+        }
+
+        try {
+            const { error } = await this.supabase.auth.signOut();
+            if (error) throw error;
+
+            this.isAuthenticated = false;
+            this.currentUser = null;
+            console.log('Supabase: 已退出登录');
+            
+            // 通知监听器
+            this.notifyAuthListeners('SIGNED_OUT', null);
+            
+            return { success: true };
+        } catch (error) {
+            console.error('Supabase: 退出登录失败', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * 获取当前会话
+     */
+    async getSession() {
+        if (!this.supabase) return null;
+
+        try {
+            const { data: { session }, error } = await this.supabase.auth.getSession();
+            if (error) throw error;
+
+            if (session?.user) {
+                this.isAuthenticated = true;
+                this.currentUser = session.user;
+                console.log('Supabase: 恢复会话', session.user.email);
+            }
+
+            return session;
+        } catch (error) {
+            console.error('Supabase: 获取会话失败', error);
+            return null;
+        }
+    }
+
+    /**
+     * 获取当前用户信息
+     */
+    getUserInfo() {
+        if (!this.currentUser) return null;
+        
+        return {
+            id: this.currentUser.id,
+            email: this.currentUser.email,
+            createdAt: this.currentUser.created_at
+        };
+    }
+
+    /**
+     * 获取用户ID
+     */
+    getUserId() {
+        return this.currentUser?.id || null;
+    }
+
+    /**
+     * 检查是否已认证
+     */
+    isUserAuthenticated() {
+        return this.isAuthenticated && this.currentUser !== null;
+    }
+
+    /**
+     * 注册认证状态监听器
+     */
+    onAuthStateChange(callback) {
+        this.authListeners.push(callback);
+        
+        // 如果已经有用户，立即通知
+        if (this.isAuthenticated && this.currentUser) {
+            callback('SIGNED_IN', this.currentUser);
+        }
+        
+        // 返回取消订阅函数
+        return () => {
+            const index = this.authListeners.indexOf(callback);
+            if (index > -1) {
+                this.authListeners.splice(index, 1);
+            }
+        };
+    }
+
+    /**
+     * 通知所有认证监听器
+     */
+    notifyAuthListeners(event, user) {
+        this.authListeners.forEach(callback => {
+            try {
+                callback(event, user);
+            } catch (error) {
+                console.error('Supabase: 认证监听器错误', error);
+            }
+        });
+    }
+
+    /**
+     * 翻译认证错误信息为中文
+     */
+    translateAuthError(message) {
+        const errorMap = {
+            'Invalid login credentials': '邮箱或密码错误',
+            'Email not confirmed': '邮箱未验证，请检查邮箱',
+            'User already registered': '该邮箱已注册',
+            'Password should be at least 6 characters': '密码至少需要6位字符',
+            'Unable to validate email address': '邮箱格式不正确',
+            'Signups not allowed': '注册功能未开启',
+            'Email link is invalid or has expired': '验证链接已过期，请重新发送'
+        };
+
+        for (const [key, value] of Object.entries(errorMap)) {
+            if (message.includes(key)) {
+                return value;
+            }
+        }
+
+        return message;
+    }
+
+    // ==================== 用户数据隔离方法 ====================
+
+    /**
+     * 获取用户专属数据（带用户ID过滤）
+     */
+    async getUserData(table) {
+        if (!this.supabase || !this.isAuthenticated) {
+            return { error: '未登录' };
+        }
+
+        const userId = this.getUserId();
+        if (!userId) return { error: '无法获取用户ID' };
+
+        try {
+            const { data, error } = await this.supabase
+                .from(table)
+                .select('*')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            return { data };
+        } catch (error) {
+            console.error(`Supabase: 获取${table}失败`, error);
+            return { error: error.message };
+        }
+    }
+
+    /**
+     * 保存用户数据（自动添加用户ID）
+     */
+    async saveUserData(table, record) {
+        if (!this.supabase || !this.isAuthenticated) {
+            return { error: '未登录', queued: false };
+        }
+
+        const userId = this.getUserId();
+        if (!userId) return { error: '无法获取用户ID' };
+
+        // 自动添加用户ID和时间戳
+        const recordWithUser = {
+            ...record,
+            user_id: userId,
+            updated_at: new Date().toISOString()
+        };
+
+        if (!record.id) {
+            recordWithUser.created_at = new Date().toISOString();
+        }
+
+        try {
+            const { data, error } = await this.supabase
+                .from(table)
+                .upsert(recordWithUser, { onConflict: 'id' });
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (error) {
+            console.error(`Supabase: 保存${table}失败`, error);
+            return { error: error.message };
+        }
+    }
+
+    /**
+     * 删除用户数据
+     */
+    async deleteUserData(table, recordId) {
+        if (!this.supabase || !this.isAuthenticated) {
+            return { error: '未登录' };
+        }
+
+        const userId = this.getUserId();
+        if (!userId) return { error: '无法获取用户ID' };
+
+        try {
+            const { error } = await this.supabase
+                .from(table)
+                .delete()
+                .eq('id', recordId)
+                .eq('user_id', userId); // 确保只能删除自己的数据
+
+            if (error) throw error;
+            return { success: true };
+        } catch (error) {
+            console.error(`Supabase: 删除${table}失败`, error);
+            return { error: error.message };
+        }
+    }
+
+    // ==================== 家庭组功能 ====================
+
+    /**
+     * 创建家庭
+     */
+    async createFamily(name) {
+        if (!this.supabase || !this.isAuthenticated) {
+            return { success: false, error: '未登录' };
+        }
+
+        const userId = this.getUserId();
+        if (!userId) return { success: false, error: '无法获取用户ID' };
+
+        try {
+            // 创建家庭
+            const { data: family, error: familyError } = await this.supabase
+                .from('families')
+                .insert({ name, owner_id: userId })
+                .select()
+                .single();
+
+            if (familyError) throw familyError;
+
+            // 创建者自动加入家庭
+            const { error: joinError } = await this.supabase
+                .from('family_users')
+                .insert({ family_id: family.id, user_id: userId, role: 'owner' });
+
+            if (joinError) throw joinError;
+
+            this.currentFamily = family;
+            console.log('Supabase: 家庭创建成功', family);
+            
+            return { success: true, family };
+        } catch (error) {
+            console.error('Supabase: 创建家庭失败', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * 通过邀请码加入家庭
+     */
+    async joinFamily(inviteCode) {
+        if (!this.supabase || !this.isAuthenticated) {
+            return { success: false, error: '未登录' };
+        }
+
+        const userId = this.getUserId();
+        if (!userId) return { success: false, error: '无法获取用户ID' };
+
+        try {
+            // 查找家庭
+            const { data: family, error: findError } = await this.supabase
+                .from('families')
+                .select('*')
+                .eq('invite_code', inviteCode.toUpperCase())
+                .single();
+
+            if (findError || !family) {
+                return { success: false, error: '邀请码无效' };
+            }
+
+            // 检查是否已加入
+            const { data: existing } = await this.supabase
+                .from('family_users')
+                .select('id')
+                .eq('family_id', family.id)
+                .eq('user_id', userId)
+                .single();
+
+            if (existing) {
+                this.currentFamily = family;
+                return { success: true, family, message: '你已经是该家庭成员' };
+            }
+
+            // 加入家庭
+            const { error: joinError } = await this.supabase
+                .from('family_users')
+                .insert({ family_id: family.id, user_id: userId, role: 'member' });
+
+            if (joinError) throw joinError;
+
+            this.currentFamily = family;
+            console.log('Supabase: 成功加入家庭', family);
+            
+            return { success: true, family };
+        } catch (error) {
+            console.error('Supabase: 加入家庭失败', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * 获取当前用户的家庭
+     */
+    async getCurrentFamily() {
+        if (!this.supabase || !this.isAuthenticated) {
+            return null;
+        }
+
+        try {
+            const { data, error } = await this.supabase
+                .from('families')
+                .select('*, family_users!inner(*)')
+                .eq('family_users.user_id', this.getUserId())
+                .single();
+
+            if (error) {
+                if (error.code === 'PGRST116') {
+                    // 没有加入任何家庭
+                    return null;
+                }
+                throw error;
+            }
+
+            this.currentFamily = data;
+            return data;
+        } catch (error) {
+            console.error('Supabase: 获取家庭信息失败', error);
+            return null;
+        }
+    }
+
+    /**
+     * 获取家庭成员列表（同一家庭的所有用户）
+     */
+    async getFamilyMembers() {
+        if (!this.supabase || !this.isAuthenticated || !this.currentFamily) {
+            return { error: '未登录或未加入家庭' };
+        }
+
+        try {
+            const { data, error } = await this.supabase
+                .from('family_users')
+                .select(`
+                    id,
+                    role,
+                    joined_at,
+                    user_id
+                `)
+                .eq('family_id', this.currentFamily.id);
+
+            if (error) throw error;
+            return { data };
+        } catch (error) {
+            console.error('Supabase: 获取家庭成员失败', error);
+            return { error: error.message };
+        }
+    }
+
+    /**
+     * 检查用户是否已加入家庭
+     */
+    hasFamily() {
+        return this.currentFamily !== null;
+    }
+
+    /**
+     * 获取当前家庭ID
+     */
+    getFamilyId() {
+        return this.currentFamily?.id || null;
+    }
+
+    /**
+     * 获取邀请码
+     */
+    getInviteCode() {
+        return this.currentFamily?.invite_code || null;
+    }
+
+    /**
+     * 退出当前家庭
+     */
+    async leaveFamily() {
+        if (!this.supabase || !this.isAuthenticated) {
+            return { success: false, error: '未登录' };
+        }
+
+        if (!this.currentFamily) {
+            return { success: false, error: '未加入任何家庭' };
+        }
+
+        try {
+            const { error } = await this.supabase
+                .from('family_users')
+                .delete()
+                .eq('family_id', this.currentFamily.id)
+                .eq('user_id', this.getUserId());
+
+            if (error) throw error;
+
+            this.currentFamily = null;
+            console.log('Supabase: 已退出家庭');
+            
+            return { success: true };
+        } catch (error) {
+            console.error('Supabase: 退出家庭失败', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    // ==================== 家庭数据操作（替代原来的用户数据操作）====================
+
+    /**
+     * 获取家庭数据
+     */
+    async getFamilyData(table) {
+        if (!this.supabase || !this.isAuthenticated) {
+            return { error: '未登录' };
+        }
+
+        if (!this.currentFamily) {
+            return { error: '未加入家庭' };
+        }
+
+        try {
+            const { data, error } = await this.supabase
+                .from(table)
+                .select('*')
+                .eq('family_id', this.currentFamily.id)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            return { data };
+        } catch (error) {
+            console.error(`Supabase: 获取${table}失败`, error);
+            return { error: error.message };
+        }
+    }
+
+    /**
+     * 保存家庭数据（自动添加 family_id）
+     */
+    async saveFamilyData(table, record) {
+        if (!this.supabase || !this.isAuthenticated) {
+            return { error: '未登录' };
+        }
+
+        if (!this.currentFamily) {
+            return { error: '未加入家庭，请先创建或加入一个家庭' };
+        }
+
+        // 自动添加 family_id 和时间戳
+        const recordWithFamily = {
+            ...record,
+            family_id: this.currentFamily.id,
+            updated_at: new Date().toISOString()
+        };
+
+        if (!record.id) {
+            recordWithFamily.created_at = new Date().toISOString();
+        }
+
+        try {
+            const { data, error } = await this.supabase
+                .from(table)
+                .upsert(recordWithFamily, { onConflict: 'id' });
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (error) {
+            console.error(`Supabase: 保存${table}失败`, error);
+            return { error: error.message };
+        }
+    }
+
+    /**
+     * 删除家庭数据
+     */
+    async deleteFamilyData(table, recordId) {
+        if (!this.supabase || !this.isAuthenticated) {
+            return { error: '未登录' };
+        }
+
+        if (!this.currentFamily) {
+            return { error: '未加入家庭' };
+        }
+
+        try {
+            const { error } = await this.supabase
+                .from(table)
+                .delete()
+                .eq('id', recordId);
+
+            if (error) throw error;
+            return { success: true };
+        } catch (error) {
+            console.error(`Supabase: 删除${table}失败`, error);
+            return { error: error.message };
+        }
+    }
 }
 
 // 导出单例
 const supabaseClient = new SupabaseClient();
 
-// 供外部调用
+// 供外部调用（兼容两种命名）
 window.supabaseClient = supabaseClient;
+window.supabaseManager = supabaseClient;

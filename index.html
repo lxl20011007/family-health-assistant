@@ -14,6 +14,24 @@
             <div class="header-top">
                 <h1><i class="fas fa-heartbeat"></i> 健康助手</h1>
                 <div class="header-actions">
+                    <!-- 用户信息显示（登录后显示） -->
+                    <div id="userInfo" class="user-info" style="display: none;">
+                        <span id="userEmail" class="user-email"></span>
+                        <button id="logoutBtn" class="btn btn-icon btn-sm" title="退出登录">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- 登录按钮（未登录时显示） -->
+                    <button id="loginBtn" class="btn btn-primary btn-sm" title="登录/注册">
+                        <i class="fas fa-sign-in-alt"></i> 登录
+                    </button>
+                    
+                    <!-- 家庭组按钮（登录后显示） -->
+                    <button id="familyBtn" class="btn btn-icon" title="家庭设置" style="display: none;">
+                        <i class="fas fa-users"></i>
+                    </button>
+                    
                     <button id="cloudSyncBtn" class="btn btn-icon" title="云同步设置">
                         <i class="fas fa-cloud"></i>
                     </button>
@@ -283,6 +301,75 @@
     <!-- 模态框容器 -->
     <div id="modalContainer"></div>
 
+    <!-- 登录/注册模态框 -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-circle"></i> 登录 / 注册</h3>
+                <button class="close-btn" onclick="closeModal('authModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- 登录/注册切换 -->
+                <div class="auth-tabs">
+                    <button id="loginTabBtn" class="auth-tab active">登录</button>
+                    <button id="registerTabBtn" class="auth-tab">注册</button>
+                </div>
+
+                <!-- 登录表单 -->
+                <div id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="loginEmail">邮箱地址:</label>
+                        <input type="email" id="loginEmail" placeholder="请输入邮箱地址" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">密码:</label>
+                        <input type="password" id="loginPassword" placeholder="请输入密码" required>
+                    </div>
+                    <div class="form-actions">
+                        <button id="loginSubmitBtn" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt"></i> 登录
+                        </button>
+                    </div>
+                    <div class="auth-message" id="loginMessage"></div>
+                </div>
+
+                <!-- 注册表单 -->
+                <div id="registerForm" class="auth-form" style="display: none;">
+                    <div class="form-group">
+                        <label for="registerEmail">邮箱地址:</label>
+                        <input type="email" id="registerEmail" placeholder="请输入邮箱地址" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">密码:</label>
+                        <input type="password" id="registerPassword" placeholder="请输入密码（至少6位）" required>
+                        <small>密码至少6位字符</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">确认密码:</label>
+                        <input type="password" id="confirmPassword" placeholder="请再次输入密码" required>
+                    </div>
+                    <div class="form-actions">
+                        <button id="registerSubmitBtn" class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i> 注册
+                        </button>
+                    </div>
+                    <div class="auth-message" id="registerMessage"></div>
+                </div>
+
+                <!-- 云同步配置提示 -->
+                <div class="cloud-sync-info" id="cloudSyncInfo" style="display: none;">
+                    <div class="info-box">
+                        <h4><i class="fas fa-cloud"></i> 云同步配置</h4>
+                        <p>登录成功！请配置云同步以启用数据备份和多设备访问。</p>
+                        <button id="configureCloudSyncBtn" class="btn btn-secondary">
+                            <i class="fas fa-cog"></i> 配置云同步
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 云同步设置模态框 -->
     <div id="cloudSyncModal" class="modal">
         <div class="modal-content">
@@ -332,11 +419,106 @@
         </div>
     </div>
 
+    <!-- 家庭组设置模态框 -->
+    <div id="familyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-users"></i> 家庭设置</h3>
+                <button class="close-btn" onclick="closeModal('familyModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- 未加入家庭时显示 -->
+                <div id="noFamilySection">
+                    <p class="description">加入家庭后，您可以与家人共享健康数据。</p>
+                    
+                    <div class="family-options">
+                        <div class="family-option-card" onclick="showCreateFamilyForm()">
+                            <i class="fas fa-plus-circle"></i>
+                            <h4>创建新家庭</h4>
+                            <p>创建一个新家庭，获得邀请码分享给家人</p>
+                        </div>
+                        
+                        <div class="family-option-card" onclick="showJoinFamilyForm()">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <h4>加入已有家庭</h4>
+                            <p>输入家人的邀请码加入现有家庭</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 创建家庭表单 -->
+                <div id="createFamilyForm" style="display: none;">
+                    <h4><i class="fas fa-plus"></i> 创建新家庭</h4>
+                    <div class="form-group">
+                        <label for="familyNameInput">家庭名称:</label>
+                        <input type="text" id="familyNameInput" placeholder="例如：幸福之家">
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-secondary" onclick="showNoFamilySection()">返回</button>
+                        <button id="createFamilyBtn" class="btn btn-primary">
+                            <i class="fas fa-check"></i> 创建家庭
+                        </button>
+                    </div>
+                    <div id="createFamilyMessage" class="auth-message"></div>
+                </div>
+
+                <!-- 加入家庭表单 -->
+                <div id="joinFamilyForm" style="display: none;">
+                    <h4><i class="fas fa-sign-in-alt"></i> 加入家庭</h4>
+                    <div class="form-group">
+                        <label for="inviteCodeInput">邀请码:</label>
+                        <input type="text" id="inviteCodeInput" placeholder="请输入6位邀请码" maxlength="6" style="text-transform: uppercase;">
+                        <small>向家人索取邀请码</small>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-secondary" onclick="showNoFamilySection()">返回</button>
+                        <button id="joinFamilyBtn" class="btn btn-primary">
+                            <i class="fas fa-check"></i> 加入家庭
+                        </button>
+                    </div>
+                    <div id="joinFamilyMessage" class="auth-message"></div>
+                </div>
+
+                <!-- 已加入家庭时显示 -->
+                <div id="familyInfoSection" style="display: none;">
+                    <div class="family-info-card">
+                        <h4 id="familyNameDisplay"><i class="fas fa-home"></i> 家庭名称</h4>
+                        <div class="invite-code-box">
+                            <label>邀请码:</label>
+                            <div class="invite-code-display">
+                                <span id="inviteCodeDisplay">ABC123</span>
+                                <button id="copyInviteCodeBtn" class="btn btn-sm btn-icon" title="复制邀请码">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                            <small>分享此邀请码给家人，让他们加入您的家庭</small>
+                        </div>
+                    </div>
+
+                    <div class="family-members-section">
+                        <h4><i class="fas fa-users"></i> 家庭成员</h4>
+                        <div id="familyMembersList" class="family-members-list">
+                            <!-- 动态生成 -->
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button id="leaveFamilyBtn" class="btn btn-danger">
+                            <i class="fas fa-sign-out-alt"></i> 退出家庭
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript文件 -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="diet-manager.js"></script>
     <script src="ai-consultation.js"></script>
-    <script src="supabase-client.js"></script>
-    <script src="app.js"></script>
+    <script src="supabase-client-new.js"></script>
+    <script src="app-auth.js"></script>
+    <script src="family-manager.js"></script>
+    <script src="app-integrated.js"></script>
 </body>
 </html>
