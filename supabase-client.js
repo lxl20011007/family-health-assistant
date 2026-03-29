@@ -631,18 +631,42 @@ class SupabaseClient {
         }
 
         const userId = this.getUserId();
-        console.log('Supabase: 当前用户ID', userId);
-        console.log('Supabase: 当前用户', this.currentUser);
+        const userEmail = this.currentUser?.email;
         
-        if (!userId) return { success: false, error: '无法获取用户ID' };
+        console.log('Supabase: 当前用户信息', {
+            userId,
+            userEmail,
+            isAuthenticated: this.isAuthenticated,
+            currentUser: this.currentUser
+        });
+        
+        if (!userId) {
+            console.error('Supabase: 无法获取用户ID，尝试从Supabase直接获取');
+            // 尝试直接从 Supabase 获取用户
+            try {
+                const { data: { user } } = await this.supabase.auth.getUser();
+                console.log('Supabase: 直接获取的用户', user);
+                if (user) {
+                    this.currentUser = user;
+                    return this.createFamily(name); // 重新调用
+                }
+            } catch (e) {
+                console.error('Supabase: 获取用户失败', e);
+            }
+            return { success: false, error: '无法获取用户ID' };
+        }
 
         try {
-            console.log('Supabase: 插入家庭数据', { name, owner_id: userId });
+            console.log('Supabase: 准备插入数据', { name, owner_id: userId });
+            
+            // 直接执行 SQL 查看当前用户
+            const { data: sessionData } = await this.supabase.auth.getSession();
+            console.log('Supabase: Session', sessionData);
             
             // 创建家庭
             const { data: family, error: familyError } = await this.supabase
                 .from('families')
-                .insert({ name, owner_id: userId })
+                .insert({ name: name, owner_id: userId })
                 .select()
                 .single();
 
