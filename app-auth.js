@@ -39,12 +39,27 @@ class AuthManager {
 
         // 监听认证状态变化
         this.supabase.onAuthStateChange((event, user) => {
-            console.log(`Auth: 认证状态变化 - ${event}`, user);
+            console.log(`Auth: 认证状态变化 - ${event}`, user?.email);
             this.handleAuthStateChange(event, user);
         });
 
-        // 尝试恢复会话
-        await this.supabase.getSession();
+        // 等待一小段时间让 Supabase 完成初始化
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // 手动检查当前会话状态
+        const session = await this.supabase.getSession();
+        console.log('Auth: 会话检查结果', session?.user?.email || '无用户');
+        
+        // 如果有用户但还没更新 UI，手动更新
+        if (session?.user) {
+            this.isAuthenticated = true;
+            this.currentUser = session.user;
+            this.showAuthenticatedUI();
+            this.app.onUserAuthenticated();
+        } else {
+            // 显示未登录状态
+            this.showUnauthenticatedUI();
+        }
     }
 
     // 处理认证状态变化
