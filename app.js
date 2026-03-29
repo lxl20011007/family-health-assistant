@@ -807,39 +807,35 @@ class FamilyHealthApp {
     // 加载成员列表
     loadMembers() {
         const members = this.getMembers();
-        const memberSelect = document.getElementById('memberSelect');
         const memberList = document.getElementById('memberList');
 
-        // 清空选择器和列表
-        memberSelect.innerHTML = '<option value="">请选择家庭成员</option>';
-        memberList.innerHTML = '';
+        // 清空成员列表
+        if (memberList) {
+            memberList.innerHTML = '';
+        }
+
+        // 更新下拉菜单
+        this.updateMemberDropdownMenu();
 
         if (members.length === 0) {
-            memberList.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-user-friends"></i>
-                    <p>暂无家庭成员，请点击上方按钮添加</p>
-                </div>
-            `;
+            if (memberList) {
+                memberList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-user-friends"></i>
+                        <p>暂无家庭成员，请点击上方按钮添加</p>
+                    </div>
+                `;
+            }
             return;
         }
 
-        // 填充选择器
-        members.forEach(member => {
-            const option = document.createElement('option');
-            option.value = member.id;
-            option.textContent = `${member.name} (${member.gender === 'male' ? '男' : '女'}, ${this.calculateAge(member.birthDate)}岁)`;
-            if (member.id === this.currentMemberId) {
-                option.selected = true;
-            }
-            memberSelect.appendChild(option);
-        });
-
-        // 填充成员列表
-        members.forEach(member => {
-            const memberCard = this.createMemberCard(member);
-            memberList.appendChild(memberCard);
-        });
+        // 填充成员列表卡片
+        if (memberList) {
+            members.forEach(member => {
+                const memberCard = this.createMemberCard(member);
+                memberList.appendChild(memberCard);
+            });
+        }
     }
 
     // 创建成员卡片
