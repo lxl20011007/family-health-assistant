@@ -338,6 +338,94 @@ body {
     gap: 8px;
 }
 
+/* ==================== 成员卡片新样式 ==================== */
+.member-card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.member-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.member-card-header .member-avatar {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.member-card-header .member-info h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.member-card-header .member-info p {
+    margin: 4px 0 0 0;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.member-card-body {
+    padding: 12px 0;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+}
+
+.member-detail {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 0.9rem;
+}
+
+.member-detail span:first-child {
+    color: #666;
+}
+
+.member-detail span:first-child i {
+    margin-right: 6px;
+    color: #667eea;
+}
+
+.member-detail span:last-child {
+    color: #333;
+    font-weight: 500;
+}
+
+.member-card-footer {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.member-card-footer .btn {
+    flex: 1;
+}
+
+.btn-outline-danger {
+    background: transparent;
+    border: 1px solid #dc3545;
+    color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+    background: #dc3545;
+    color: white;
+}
+
 .card-body {
     color: #555;
     font-size: 0.95rem;

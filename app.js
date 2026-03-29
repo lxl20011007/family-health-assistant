@@ -823,39 +823,51 @@ class FamilyHealthApp {
     // 创建成员卡片
     createMemberCard(member) {
         const card = document.createElement('div');
-        card.className = 'card';
+        card.className = 'card member-card';
         card.innerHTML = `
-            <div class="card-header">
-                <div class="card-title">
-                    <i class="fas fa-user"></i> ${member.name}
+            <div class="member-card-header">
+                <div class="member-avatar">
+                    <i class="fas fa-user"></i>
                 </div>
-                <div class="card-actions">
-                    <button class="btn btn-secondary btn-sm edit-member" data-id="${member.id}">
-                        <i class="fas fa-edit"></i> 编辑
-                    </button>
-                    <button class="btn btn-danger btn-sm delete-member" data-id="${member.id}">
-                        <i class="fas fa-trash"></i> 删除
-                    </button>
+                <div class="member-info">
+                    <h3>${member.name}</h3>
+                    <p>${member.gender === 'male' ? '男' : '女'} · ${this.calculateAge(member.birthDate)}岁</p>
                 </div>
             </div>
-            <div class="card-body">
-                <p><strong>性别：</strong>${member.gender === 'male' ? '男' : '女'}</p>
-                <p><strong>出生日期：</strong>${member.birthDate}</p>
-                <p><strong>年龄：</strong>${this.calculateAge(member.birthDate)}岁</p>
-                ${member.notes ? `<p><strong>备注：</strong>${member.notes}</p>` : ''}
+            <div class="member-card-body">
+                <div class="member-detail">
+                    <span><i class="fas fa-birthday-cake"></i> 出生日期</span>
+                    <span>${member.birthDate}</span>
+                </div>
+                ${member.notes ? `<div class="member-detail"><span><i class="fas fa-sticky-note"></i> 备注</span><span>${member.notes}</span></div>` : ''}
+            </div>
+            <div class="member-card-footer">
+                <button class="btn btn-secondary btn-sm edit-member" data-id="${member.id}">
+                    <i class="fas fa-edit"></i> 编辑
+                </button>
+                <button class="btn btn-outline-danger btn-sm delete-member" data-id="${member.id}">
+                    <i class="fas fa-trash"></i> 删除
+                </button>
             </div>
         `;
 
         // 绑定编辑和删除事件
-        card.querySelector('.edit-member').addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.showEditMemberModal(member.id);
-        });
+        const editBtn = card.querySelector('.edit-member');
+        const deleteBtn = card.querySelector('.delete-member');
+        
+        if (editBtn) {
+            editBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.showEditMemberModal(member.id);
+            });
+        }
 
-        card.querySelector('.delete-member').addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.deleteMember(member.id);
-        });
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.deleteMember(member.id);
+            });
+        }
 
         return card;
     }
