@@ -267,17 +267,39 @@ class FamilyHealthApp {
                 newMemberBtn.addEventListener('click', () => this.showAddMemberModal());
             }
 
-            // 成员选择器
-            const memberSelect = document.getElementById('memberSelect');
-            if (memberSelect) {
-                memberSelect.addEventListener('change', (e) => {
-                    this.currentMemberId = e.target.value;
-                    this.updateMemberSelect();
-                    this.loadHealthRecords();
-                    this.loadDietRecords();
-                    this.loadExercises();
+            // 成员下拉菜单
+            const memberDropdownBtn = document.getElementById('memberDropdownBtn');
+            const memberDropdownMenu = document.getElementById('memberDropdownMenu');
+            const addMemberMenuBtn = document.getElementById('addMemberMenuBtn');
+            const manageMembersMenuBtn = document.getElementById('manageMembersMenuBtn');
+            
+            if (memberDropdownBtn) {
+                memberDropdownBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.toggleMemberDropdown();
                 });
             }
+            
+            if (addMemberMenuBtn) {
+                addMemberMenuBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.hideMemberDropdown();
+                    this.showAddMemberModal();
+                });
+            }
+            
+            if (manageMembersMenuBtn) {
+                manageMembersMenuBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.hideMemberDropdown();
+                    this.switchTab('members');
+                });
+            }
+            
+            // 点击其他地方关闭下拉菜单
+            document.addEventListener('click', () => {
+                this.hideMemberDropdown();
+            });
 
             // 添加健康记录按钮
             const addHealthBtn = document.getElementById('addHealthBtn');
@@ -891,16 +913,97 @@ class FamilyHealthApp {
         const members = this.getMembers();
         const memberSelect = document.getElementById('memberSelect');
         
-        memberSelect.innerHTML = '<option value="">请选择家庭成员</option>';
-        members.forEach(member => {
-            const option = document.createElement('option');
-            option.value = member.id;
-            option.textContent = `${member.name} (${member.gender === 'male' ? '男' : '女'}, ${this.calculateAge(member.birthDate)}岁)`;
-            if (member.id === this.currentMemberId) {
-                option.selected = true;
+        if (memberSelect) {
+            memberSelect.innerHTML = '<option value="">请选择家庭成员</option>';
+            members.forEach(member => {
+                const option = document.createElement('option');
+                option.value = member.id;
+                option.textContent = `${member.name} (${member.gender === 'male' ? '男' : '女'}, ${this.calculateAge(member.birthDate)}岁)`;
+                if (member.id === this.currentMemberId) {
+                    option.selected = true;
+                }
+                memberSelect.appendChild(option);
+            });
+        }
+        
+        // 更新下拉菜单
+        this.updateMemberDropdownMenu();
+    }
+    
+    // 切换成员下拉菜单
+    toggleMemberDropdown() {
+        const menu = document.getElementById('memberDropdownMenu');
+        if (menu) {
+            if (menu.style.display === 'none' || !menu.classList.contains('show')) {
+                this.updateMemberDropdownMenu();
+                menu.style.display = 'block';
+                menu.classList.add('show');
+            } else {
+                this.hideMemberDropdown();
             }
-            memberSelect.appendChild(option);
-        });
+        }
+    }
+    
+    // 隐藏成员下拉菜单
+    hideMemberDropdown() {
+        const menu = document.getElementById('memberDropdownMenu');
+        if (menu) {
+            menu.style.display = 'none';
+            menu.classList.remove('show');
+        }
+    }
+    
+    // 更新成员下拉菜单
+    updateMemberDropdownMenu() {
+        const members = this.getMembers();
+        const menuList = document.getElementById('memberMenuList');
+        const selectedNameSpan = document.getElementById('selectedMemberName');
+        
+        if (selectedNameSpan) {
+            if (this.currentMemberId) {
+                const currentMember = members.find(m => m.id === this.currentMemberId);
+                selectedNameSpan.textContent = currentMember ? currentMember.name : '选择成员';
+            } else {
+                selectedNameSpan.textContent = '选择成员';
+            }
+        }
+        
+        if (menuList) {
+            if (members.length === 0) {
+                menuList.innerHTML = '<div class="dropdown-item" style="color: #999;">暂无成员</div>';
+                return;
+            }
+            
+            menuList.innerHTML = members.map(member => `
+                <div class="member-menu-item ${member.id === this.currentMemberId ? 'selected' : ''}" data-id="${member.id}">
+                    <div class="member-menu-item-info">
+                        <i class="fas fa-user"></i>
+                        <span>${member.name} (${member.gender === 'male' ? '男' : '女'}, ${this.calculateAge(member.birthDate)}岁)</span>
+                    </div>
+                    <div class="member-menu-item-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); app.showEditMemberModal('${member.id}'); app.hideMemberDropdown();">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); app.deleteMember('${member.id}'); app.hideMemberDropdown();">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            // 添加点击选中事件
+            menuList.querySelectorAll('.member-menu-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    if (!e.target.closest('.member-menu-item-actions')) {
+                        this.currentMemberId = item.dataset.id;
+                        this.hideMemberDropdown();
+                        this.loadHealthRecords();
+                        this.loadDietRecords();
+                        this.loadExercises();
+                    }
+                });
+            });
+        }
     }
 
     // 显示添加成员模态框

@@ -41,12 +41,22 @@
                 </div>
             </div>
             <div class="member-selector">
-                <select id="memberSelect">
-                    <option value="">请选择家庭成员</option>
-                </select>
-                <button id="addMemberBtn" class="btn btn-primary btn-sm">
-                    <i class="fas fa-user-plus"></i> 添加成员
-                </button>
+                <div class="member-dropdown">
+                    <button id="memberDropdownBtn" class="btn btn-secondary dropdown-toggle">
+                        <i class="fas fa-users"></i> 
+                        <span id="selectedMemberName">选择成员</span>
+                    </button>
+                    <div id="memberDropdownMenu" class="dropdown-menu" style="display: none;">
+                        <div id="memberMenuList"></div>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" id="addMemberMenuBtn" class="dropdown-item">
+                            <i class="fas fa-plus"></i> 添加新成员
+                        </a>
+                        <a href="#" id="manageMembersMenuBtn" class="dropdown-item">
+                            <i class="fas fa-cog"></i> 管理成员
+                        </a>
+                    </div>
+                </div>
             </div>
         </header>
 

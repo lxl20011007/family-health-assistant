@@ -426,6 +426,121 @@ body {
     color: white;
 }
 
+/* ==================== 成员下拉菜单 ==================== */
+.member-dropdown {
+    position: relative;
+    flex: 1;
+}
+
+.member-dropdown .dropdown-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: space-between;
+    background: white;
+    border: 1px solid #ddd;
+    color: #333;
+    padding: 10px 14px;
+    border-radius: 8px;
+}
+
+.member-dropdown .dropdown-toggle:hover {
+    background: #f8f9fa;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    margin-top: 4px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.dropdown-menu.show {
+    display: block !important;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    color: #333;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+    background: #f0f4ff;
+}
+
+.dropdown-item i {
+    width: 20px;
+    color: #667eea;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: #eee;
+    margin: 4px 0;
+}
+
+.member-menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.member-menu-item:hover {
+    background: #f0f4ff;
+}
+
+.member-menu-item.selected {
+    background: #e8eeff;
+}
+
+.member-menu-item-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.member-menu-item-info i {
+    color: #667eea;
+}
+
+.member-menu-item-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.member-menu-item-actions .btn {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+}
+
+.member-menu-item-actions .btn-danger {
+    background: #dc3545;
+    border-color: #dc3545;
+    color: white;
+}
+
+.member-menu-item-actions .btn-danger:hover {
+    background: #c82333;
+}
+
 .card-body {
     color: #555;
     font-size: 0.95rem;
