@@ -81,10 +81,13 @@ class AIHealthAssistant {
             }
         });
 
-        // 监听成员选择变化
-        document.getElementById('memberSelect').addEventListener('change', (e) => {
-            this.currentMember = e.target.value ? this.getMemberInfo(e.target.value) : null;
-        });
+        // 监听成员选择变化（使用下拉菜单）
+        const memberSelect = document.getElementById('memberSelect');
+        if (memberSelect) {
+            memberSelect.addEventListener('change', (e) => {
+                this.currentMember = e.target.value ? this.getMemberInfo(e.target.value) : null;
+            });
+        }
 
         // ===== 文件上传功能 =====
         const uploadBtn = document.getElementById('uploadFileBtn');
