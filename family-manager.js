@@ -9,44 +9,58 @@ class FamilyManager {
         this.supabase = window.supabaseClient || window.supabaseManager;
         this.currentFamily = null;
         
-        this.bindEvents();
+        // 延迟绑定事件，确保 DOM 已加载
+        setTimeout(() => this.bindEvents(), 100);
     }
 
     // 绑定事件
     bindEvents() {
         // 家庭按钮
-        document.getElementById('familyBtn')?.addEventListener('click', () => {
-            this.showFamilyModal();
-        });
+        const familyBtn = document.getElementById('familyBtn');
+        if (familyBtn) {
+            familyBtn.addEventListener('click', () => this.showFamilyModal());
+        }
 
         // 创建家庭
-        document.getElementById('createFamilyBtn')?.addEventListener('click', () => {
-            this.createFamily();
-        });
+        const createFamilyBtn = document.getElementById('createFamilyBtn');
+        if (createFamilyBtn) {
+            createFamilyBtn.addEventListener('click', () => this.createFamily());
+        }
 
         // 加入家庭
-        document.getElementById('joinFamilyBtn')?.addEventListener('click', () => {
-            this.joinFamily();
-        });
+        const joinFamilyBtn = document.getElementById('joinFamilyBtn');
+        if (joinFamilyBtn) {
+            joinFamilyBtn.addEventListener('click', () => this.joinFamily());
+        }
 
         // 退出家庭
-        document.getElementById('leaveFamilyBtn')?.addEventListener('click', () => {
-            this.leaveFamily();
-        });
+        const leaveFamilyBtn = document.getElementById('leaveFamilyBtn');
+        if (leaveFamilyBtn) {
+            leaveFamilyBtn.addEventListener('click', () => this.leaveFamily());
+        }
 
         // 复制邀请码
-        document.getElementById('copyInviteCodeBtn')?.addEventListener('click', () => {
-            this.copyInviteCode();
-        });
+        const copyInviteCodeBtn = document.getElementById('copyInviteCodeBtn');
+        if (copyInviteCodeBtn) {
+            copyInviteCodeBtn.addEventListener('click', () => this.copyInviteCode());
+        }
 
         // Enter 键支持
-        document.getElementById('familyNameInput')?.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.createFamily();
-        });
+        const familyNameInput = document.getElementById('familyNameInput');
+        if (familyNameInput) {
+            familyNameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') this.createFamily();
+            });
+        }
 
-        document.getElementById('inviteCodeInput')?.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.joinFamily();
-        });
+        const inviteCodeInput = document.getElementById('inviteCodeInput');
+        if (inviteCodeInput) {
+            inviteCodeInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') this.joinFamily();
+            });
+        }
+
+        console.log('FamilyManager: 事件绑定完成');
     }
 
     // 显示家庭模态框

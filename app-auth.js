@@ -120,63 +120,94 @@ class AuthManager {
 
     // 绑定认证相关事件
     bindAuthEvents() {
-        // 登录按钮点击
-        document.getElementById('loginBtn').addEventListener('click', () => {
-            this.showAuthModal();
-        });
+        // 延迟绑定，确保 DOM 已加载
+        setTimeout(() => {
+            // 登录按钮点击
+            const loginBtn = document.getElementById('loginBtn');
+            if (loginBtn) {
+                loginBtn.addEventListener('click', () => this.showAuthModal());
+            }
 
-        // 退出登录按钮
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            this.signOut();
-        });
+            // 退出登录按钮
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', () => this.signOut());
+            }
 
-        // 登录/注册标签切换
-        document.getElementById('loginTabBtn').addEventListener('click', () => {
-            this.switchAuthTab('login');
-        });
+            // 登录/注册标签切换
+            const loginTabBtn = document.getElementById('loginTabBtn');
+            if (loginTabBtn) {
+                loginTabBtn.addEventListener('click', () => this.switchAuthTab('login'));
+            }
 
-        document.getElementById('registerTabBtn').addEventListener('click', () => {
-            this.switchAuthTab('register');
-        });
+            const registerTabBtn = document.getElementById('registerTabBtn');
+            if (registerTabBtn) {
+                registerTabBtn.addEventListener('click', () => this.switchAuthTab('register'));
+            }
 
-        // 登录提交
-        document.getElementById('loginSubmitBtn').addEventListener('click', () => {
-            this.signIn();
-        });
+            // 登录提交
+            const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+            if (loginSubmitBtn) {
+                loginSubmitBtn.addEventListener('click', () => this.signIn());
+            }
 
-        // 注册提交
-        document.getElementById('registerSubmitBtn').addEventListener('click', () => {
-            this.signUp();
-        });
+            // 注册提交
+            const registerSubmitBtn = document.getElementById('registerSubmitBtn');
+            if (registerSubmitBtn) {
+                registerSubmitBtn.addEventListener('click', () => this.signUp());
+            }
 
-        // 配置云同步按钮
-        document.getElementById('configureCloudSyncBtn').addEventListener('click', () => {
-            this.closeAuthModal();
-            setTimeout(() => {
-                this.app.showCloudSyncModal();
-            }, 300);
-        });
+            // 配置云同步按钮
+            const configureCloudSyncBtn = document.getElementById('configureCloudSyncBtn');
+            if (configureCloudSyncBtn) {
+                configureCloudSyncBtn.addEventListener('click', () => {
+                    this.closeAuthModal();
+                    setTimeout(() => {
+                        if (this.app?.showCloudSyncModal) {
+                            this.app.showCloudSyncModal();
+                        }
+                    }, 300);
+                });
+            }
 
-        // 监听 Enter 键
-        document.getElementById('loginEmail').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.signIn();
-        });
+            // 监听 Enter 键
+            const loginEmail = document.getElementById('loginEmail');
+            if (loginEmail) {
+                loginEmail.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.signIn();
+                });
+            }
 
-        document.getElementById('loginPassword').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.signIn();
-        });
+            const loginPassword = document.getElementById('loginPassword');
+            if (loginPassword) {
+                loginPassword.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.signIn();
+                });
+            }
 
-        document.getElementById('registerEmail').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.signUp();
-        });
+            const registerEmail = document.getElementById('registerEmail');
+            if (registerEmail) {
+                registerEmail.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.signUp();
+                });
+            }
 
-        document.getElementById('registerPassword').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.signUp();
-        });
+            const registerPassword = document.getElementById('registerPassword');
+            if (registerPassword) {
+                registerPassword.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.signUp();
+                });
+            }
 
-        document.getElementById('confirmPassword').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.signUp();
-        });
+            const confirmPassword = document.getElementById('confirmPassword');
+            if (confirmPassword) {
+                confirmPassword.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.signUp();
+                });
+            }
+
+            console.log('Auth: 事件绑定完成');
+        }, 100);
     }
 
     // 显示认证模态框

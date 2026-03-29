@@ -42,6 +42,8 @@ class FamilyHealthApp {
     initFamilyManager() {
         if (typeof FamilyManager !== 'undefined') {
             this.familyManager = new FamilyManager(this);
+            // 保存到全局作用域供 HTML 调用
+            window.familyManager = this.familyManager;
             console.log('App: 家庭管理器已初始化');
         } else {
             console.warn('App: FamilyManager 未加载');
