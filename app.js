@@ -9,22 +9,25 @@ class FamilyHealthApp {
 
     // 初始化应用
     init() {
-        this.bindEvents();
-        this.loadMembers();
-        this.updateStats();
+        // 延迟初始化，确保 DOM 已加载
+        setTimeout(() => {
+            this.bindEvents();
+            this.loadMembers();
+            this.updateStats();
 
-        // 设置日期默认值为今天
-        const today = new Date().toISOString().split('T')[0];
-        const dietDateEl = document.getElementById('dietDate');
-        if (dietDateEl) dietDateEl.value = today;
-        const exerciseDateEl = document.getElementById('exerciseDate');
-        if (exerciseDateEl) exerciseDateEl.value = today;
-        
-        // 🔥 关键：启动自动同步机制
-        this.startAutoSync();
-        
-        // 初始化认证管理器
-        this.initAuth();
+            // 设置日期默认值为今天
+            const today = new Date().toISOString().split('T')[0];
+            const dietDateEl = document.getElementById('dietDate');
+            if (dietDateEl) dietDateEl.value = today;
+            const exerciseDateEl = document.getElementById('exerciseDate');
+            if (exerciseDateEl) exerciseDateEl.value = today;
+            
+            // 🔥 关键：启动自动同步机制
+            this.startAutoSync();
+            
+            // 初始化认证管理器
+            this.initAuth();
+        }, 50);
     }
     
     // 初始化认证管理器
@@ -243,56 +246,89 @@ class FamilyHealthApp {
 
     // 绑定事件
     bindEvents() {
-        // 底部导航栏
-        document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                const tab = e.currentTarget.dataset.tab;
-                this.switchTab(tab);
+        // 延迟绑定，确保 DOM 已加载
+        setTimeout(() => {
+            // 底部导航栏
+            document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const tab = e.currentTarget.dataset.tab;
+                    this.switchTab(tab);
+                });
             });
-        });
 
-        // 添加成员按钮
-        document.getElementById('addMemberBtn').addEventListener('click', () => this.showAddMemberModal());
-        document.getElementById('newMemberBtn').addEventListener('click', () => this.showAddMemberModal());
+            // 添加成员按钮
+            const addMemberBtn = document.getElementById('addMemberBtn');
+            if (addMemberBtn) {
+                addMemberBtn.addEventListener('click', () => this.showAddMemberModal());
+            }
+            
+            const newMemberBtn = document.getElementById('newMemberBtn');
+            if (newMemberBtn) {
+                newMemberBtn.addEventListener('click', () => this.showAddMemberModal());
+            }
 
-        // 成员选择器
-        document.getElementById('memberSelect').addEventListener('change', (e) => {
-            this.currentMemberId = e.target.value;
-            this.updateMemberSelect();
-            this.loadHealthRecords();
-            this.loadDietRecords();
-            this.loadExercises();
-        });
+            // 成员选择器
+            const memberSelect = document.getElementById('memberSelect');
+            if (memberSelect) {
+                memberSelect.addEventListener('change', (e) => {
+                    this.currentMemberId = e.target.value;
+                    this.updateMemberSelect();
+                    this.loadHealthRecords();
+                    this.loadDietRecords();
+                    this.loadExercises();
+                });
+            }
 
-        // 添加健康记录按钮
-        document.getElementById('addHealthBtn').addEventListener('click', () => this.showAddHealthModal());
+            // 添加健康记录按钮
+            const addHealthBtn = document.getElementById('addHealthBtn');
+            if (addHealthBtn) {
+                addHealthBtn.addEventListener('click', () => this.showAddHealthModal());
+            }
 
-        // 添加饮食记录按钮
-        document.getElementById('addDietBtn').addEventListener('click', () => this.showAddDietModal());
+            // 添加饮食记录按钮
+            const addDietBtn = document.getElementById('addDietBtn');
+            if (addDietBtn) {
+                addDietBtn.addEventListener('click', () => this.showAddDietModal());
+            }
 
-        // 添加运动记录按钮
-        document.getElementById('addExerciseBtn').addEventListener('click', () => this.showAddExerciseModal());
+            // 添加运动记录按钮
+            const addExerciseBtn = document.getElementById('addExerciseBtn');
+            if (addExerciseBtn) {
+                addExerciseBtn.addEventListener('click', () => this.showAddExerciseModal());
+            }
 
-        // 云同步按钮
-        const cloudSyncBtn = document.getElementById('cloudSyncBtn');
-        if (cloudSyncBtn) {
-            cloudSyncBtn.addEventListener('click', () => this.showCloudSyncModal());
-        }
+            // 云同步按钮
+            const cloudSyncBtn = document.getElementById('cloudSyncBtn');
+            if (cloudSyncBtn) {
+                cloudSyncBtn.addEventListener('click', () => this.showCloudSyncModal());
+            }
 
-        // 清空数据按钮
-        const clearAllDataBtn = document.getElementById('clearAllDataBtn');
-        if (clearAllDataBtn) {
-            clearAllDataBtn.addEventListener('click', () => this.showClearDataModal());
-        }
+            // 清空数据按钮
+            const clearAllDataBtn = document.getElementById('clearAllDataBtn');
+            if (clearAllDataBtn) {
+                clearAllDataBtn.addEventListener('click', () => this.showClearDataModal());
+            }
 
-        // 健康记录筛选
-        document.getElementById('healthFilter').addEventListener('change', () => this.loadHealthRecords());
-        
-        // 饮食日期筛选
-        document.getElementById('dietDate').addEventListener('change', () => this.loadDietRecords());
+            // 健康记录筛选
+            const healthFilter = document.getElementById('healthFilter');
+            if (healthFilter) {
+                healthFilter.addEventListener('change', () => this.loadHealthRecords());
+            }
 
-        // 运动日期筛选
-        document.getElementById('exerciseDate').addEventListener('change', () => this.loadExercises());
+            // 饮食日期筛选
+            const dietDate = document.getElementById('dietDate');
+            if (dietDate) {
+                dietDate.addEventListener('change', () => this.loadDietRecords());
+            }
+
+            // 运动日期筛选
+            const exerciseDate = document.getElementById('exerciseDate');
+            if (exerciseDate) {
+                exerciseDate.addEventListener('change', () => this.loadExercises());
+            }
+
+            console.log('App: 事件绑定完成');
+        }, 100);
     }
 
     // 切换标签页
