@@ -48,18 +48,34 @@ class SupabaseClient {
     initialize() {
         if (!this.config.url || !this.config.anonKey) {
             console.log('Supabase: 未配置，跳过初始化');
-            return;
+            return false;
         }
 
         try {
             // 动态加载Supabase库（如果尚未加载）
             if (typeof supabase === 'undefined') {
                 console.error('Supabase库未加载，请检查index.html中的script标签');
-                return;
+                return false;
             }
 
             this.supabase = supabase.createClient(this.config.url, this.config.anonKey);
             console.log('Supabase: 客户端初始化成功');
+            
+            // 设置认证状态监听器
+            this.supabase.auth.onAuthStateChange((event, session) => {
+                console.log('Supabase: 认证状态变化', event, session?.user?.email);
+                if (event === 'SIGNED_IN' && session?.user) {
+                    this.isAuthenticated = true;
+                    this.currentUser = session.user;
+                } else if (event === 'SIGNED_OUT') {
+                    this.isAuthenticated = false;
+                    this.currentUser = null;
+                }
+                // 通知所有监听器
+                this.notifyAuthListeners(event, session?.user || this.currentUser);
+            });
+            
+            // 测试连接
             this.testConnection().then(success => {
                 if (success) {
                     this.isConnected = true;
@@ -67,9 +83,12 @@ class SupabaseClient {
                     this.processSyncQueue();
                 }
             });
+            
+            return true;
         } catch (error) {
             console.error('Supabase: 初始化失败', error);
             this.updateUIStatus('error');
+            return false;
         }
     }
 

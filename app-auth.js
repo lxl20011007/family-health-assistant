@@ -49,11 +49,18 @@ class AuthManager {
 
     // 处理认证状态变化
     handleAuthStateChange(event, user) {
-        if (event === 'SIGNED_IN' && user) {
-            this.isAuthenticated = true;
-            this.currentUser = user;
-            this.showAuthenticatedUI();
-            this.app.onUserAuthenticated();
+        console.log('Auth: 处理认证状态变化', event, user?.email || this.supabase?.currentUser?.email);
+        
+        // 处理所有可能的登录事件
+        if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
+            // 获取当前用户
+            const currentUser = user || this.supabase?.currentUser;
+            if (currentUser) {
+                this.isAuthenticated = true;
+                this.currentUser = currentUser;
+                this.showAuthenticatedUI();
+                this.app.onUserAuthenticated();
+            }
         } else if (event === 'SIGNED_OUT') {
             this.isAuthenticated = false;
             this.currentUser = null;
