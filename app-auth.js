@@ -88,6 +88,12 @@ class AuthManager {
             document.getElementById('loginBtn').style.display = 'none';
         }
         
+        // 显示家庭按钮
+        const familyBtn = document.getElementById('familyBtn');
+        if (familyBtn) {
+            familyBtn.style.display = 'block';
+        }
+        
         // 检查是否需要配置云同步
         this.checkCloudSyncConfig();
     }
@@ -99,6 +105,12 @@ class AuthManager {
         // 显示登录按钮
         document.getElementById('loginBtn').style.display = 'block';
         document.getElementById('userInfo').style.display = 'none';
+        
+        // 隐藏家庭按钮
+        const familyBtn = document.getElementById('familyBtn');
+        if (familyBtn) {
+            familyBtn.style.display = 'none';
+        }
         
         // 隐藏云同步配置提示
         document.getElementById('cloudSyncInfo').style.display = 'none';

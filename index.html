@@ -28,7 +28,7 @@
                     </button>
                     
                     <!-- 家庭组按钮（登录后显示） -->
-                    <button id="familyBtn" class="btn btn-icon" title="家庭设置" style="display: none;">
+                    <button id="familyBtn" class="btn btn-icon" title="家庭设置" style="display: none;" onclick="showFamilyModal()">
                         <i class="fas fa-users"></i>
                     </button>
                     
@@ -529,6 +529,13 @@
             const modal = document.getElementById(modalId);
             if (modal) {
                 modal.style.display = 'none';
+            }
+        }
+
+        // 打开家庭模态框
+        function showFamilyModal() {
+            if (window.familyManager) {
+                window.familyManager.showFamilyModal();
             }
         }
 
