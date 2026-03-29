@@ -415,6 +415,8 @@ class SupabaseClient {
                 this.isAuthenticated = true;
                 this.currentUser = session.user;
                 console.log('Supabase: 恢复会话', session.user.email);
+                // 通知监听器更新 UI
+                this.notifyAuthListeners('SIGNED_IN', session.user);
             }
 
             return session;
