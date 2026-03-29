@@ -623,14 +623,22 @@ class SupabaseClient {
      * 创建家庭
      */
     async createFamily(name) {
+        console.log('Supabase: 开始创建家庭', name);
+        
         if (!this.supabase || !this.isAuthenticated) {
+            console.log('Supabase: 未登录');
             return { success: false, error: '未登录' };
         }
 
         const userId = this.getUserId();
+        console.log('Supabase: 当前用户ID', userId);
+        console.log('Supabase: 当前用户', this.currentUser);
+        
         if (!userId) return { success: false, error: '无法获取用户ID' };
 
         try {
+            console.log('Supabase: 插入家庭数据', { name, owner_id: userId });
+            
             // 创建家庭
             const { data: family, error: familyError } = await this.supabase
                 .from('families')
@@ -638,17 +646,25 @@ class SupabaseClient {
                 .select()
                 .single();
 
-            if (familyError) throw familyError;
+            if (familyError) {
+                console.error('Supabase: 创建家庭失败', familyError);
+                throw familyError;
+            }
 
+            console.log('Supabase: 家庭创建成功，插入成员关系');
+            
             // 创建者自动加入家庭
             const { error: joinError } = await this.supabase
                 .from('family_users')
                 .insert({ family_id: family.id, user_id: userId, role: 'owner' });
 
-            if (joinError) throw joinError;
+            if (joinError) {
+                console.error('Supabase: 加入家庭失败', joinError);
+                throw joinError;
+            }
 
             this.currentFamily = family;
-            console.log('Supabase: 家庭创建成功', family);
+            console.log('Supabase: 完成', family);
             
             return { success: true, family };
         } catch (error) {
