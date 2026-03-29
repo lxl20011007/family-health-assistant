@@ -23,6 +23,8 @@ class AuthManager {
         
         // 检查是否有保存的 Supabase 配置
         const config = this.supabase.loadConfig();
+        console.log('Auth: 加载的配置', config);
+        
         if (!config.url || !config.anonKey) {
             console.log('Auth: 未配置 Supabase，显示本地模式');
             this.showLocalMode();
@@ -31,6 +33,8 @@ class AuthManager {
 
         // 初始化 Supabase 客户端
         const initialized = this.supabase.initialize(config.url, config.anonKey);
+        console.log('Auth: Supabase 初始化结果', initialized);
+        
         if (!initialized) {
             console.error('Auth: Supabase 初始化失败');
             this.showLocalMode();
@@ -43,21 +47,24 @@ class AuthManager {
             this.handleAuthStateChange(event, user);
         });
 
-        // 等待一小段时间让 Supabase 完成初始化
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // 等待 Supabase 完成初始化
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         // 手动检查当前会话状态
         const session = await this.supabase.getSession();
         console.log('Auth: 会话检查结果', session?.user?.email || '无用户');
         
-        // 如果有用户但还没更新 UI，手动更新
+        // 无论是否有用户，都强制检查并更新 UI
         if (session?.user) {
+            console.log('Auth: 发现已登录用户，更新 UI');
             this.isAuthenticated = true;
             this.currentUser = session.user;
             this.showAuthenticatedUI();
             this.app.onUserAuthenticated();
         } else {
-            // 显示未登录状态
+            console.log('Auth: 无已登录用户，显示登录按钮');
+            this.isAuthenticated = false;
+            this.currentUser = null;
             this.showUnauthenticatedUI();
         }
     }
@@ -100,14 +107,26 @@ class AuthManager {
 
     // 显示已认证的 UI
     showAuthenticatedUI() {
-        console.log('Auth: 显示已认证 UI');
+        console.log('Auth: 显示已认证 UI - 开始更新');
         
         // 更新用户信息显示
         const userInfo = this.supabase.getUserInfo();
+        console.log('Auth: 用户信息', userInfo);
+        
         if (userInfo) {
-            document.getElementById('userEmail').textContent = userInfo.email;
-            document.getElementById('userInfo').style.display = 'flex';
-            document.getElementById('loginBtn').style.display = 'none';
+            const userEmailEl = document.getElementById('userEmail');
+            const userInfoEl = document.getElementById('userInfo');
+            const loginBtnEl = document.getElementById('loginBtn');
+            
+            console.log('Auth: 元素存在检查', {
+                userEmail: !!userEmailEl,
+                userInfo: !!userInfoEl,
+                loginBtn: !!loginBtnEl
+            });
+            
+            if (userEmailEl) userEmailEl.textContent = userInfo.email;
+            if (userInfoEl) userInfoEl.style.display = 'flex';
+            if (loginBtnEl) loginBtnEl.style.display = 'none';
         }
         
         // 显示家庭按钮
@@ -115,6 +134,8 @@ class AuthManager {
         if (familyBtn) {
             familyBtn.style.display = 'block';
         }
+        
+        console.log('Auth: 显示已认证 UI - 完成');
         
         // 检查是否需要配置云同步
         this.checkCloudSyncConfig();
