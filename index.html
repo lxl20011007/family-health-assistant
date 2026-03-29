@@ -541,20 +541,48 @@
 
         // 家庭组相关函数
         function showCreateFamilyForm() {
-            if (window.familyManager) {
-                window.familyManager.showCreateFamilyForm();
+            const fm = window.familyManager;
+            if (fm) {
+                fm.showNoFamilySection();
+                setTimeout(() => fm.showCreateFamilyForm(), 10);
+            } else {
+                // 如果 familyManager 未初始化，先隐藏无家庭界面，显示创建表单
+                const noFamilySection = document.getElementById('noFamilySection');
+                const createFamilyForm = document.getElementById('createFamilyForm');
+                if (noFamilySection && createFamilyForm) {
+                    noFamilySection.style.display = 'none';
+                    createFamilyForm.style.display = 'block';
+                    document.getElementById('familyNameInput')?.focus();
+                }
             }
         }
 
         function showJoinFamilyForm() {
-            if (window.familyManager) {
-                window.familyManager.showJoinFamilyForm();
+            const fm = window.familyManager;
+            if (fm) {
+                fm.showNoFamilySection();
+                setTimeout(() => fm.showJoinFamilyForm(), 10);
+            } else {
+                // 如果 familyManager 未初始化，先隐藏无家庭界面，显示加入表单
+                const noFamilySection = document.getElementById('noFamilySection');
+                const joinFamilyForm = document.getElementById('joinFamilyForm');
+                if (noFamilySection && joinFamilyForm) {
+                    noFamilySection.style.display = 'none';
+                    joinFamilyForm.style.display = 'block';
+                    document.getElementById('inviteCodeInput')?.focus();
+                }
             }
         }
 
         function showNoFamilySection() {
-            if (window.familyManager) {
-                window.familyManager.showNoFamilySection();
+            const fm = window.familyManager;
+            if (fm) {
+                fm.showNoFamilySection();
+            } else {
+                document.getElementById('noFamilySection').style.display = 'block';
+                document.getElementById('createFamilyForm').style.display = 'none';
+                document.getElementById('joinFamilyForm').style.display = 'none';
+                document.getElementById('familyInfoSection').style.display = 'none';
             }
         }
 

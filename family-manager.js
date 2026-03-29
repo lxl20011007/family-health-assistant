@@ -65,6 +65,11 @@ class FamilyManager {
 
     // 显示家庭模态框
     async showFamilyModal() {
+        // 确保 familyManager 已初始化
+        if (!window.familyManager) {
+            window.familyManager = this;
+        }
+        
         document.getElementById('familyModal').style.display = 'block';
         
         // 检查当前用户是否有家庭
