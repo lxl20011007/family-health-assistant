@@ -1206,20 +1206,23 @@ body {
     margin-top: 6px;
 }
 
-/* 云同步开关样式 */
-.btn-icon.cloud-sync-on {
-    color: #4CAF50;
-    background: rgba(76, 175, 80, 0.1);
+/* 云同步开关样式 - 提高优先级 */
+#cloudSyncToggle.cloud-sync-on {
+    color: #4CAF50 !important;
+    background: rgba(76, 175, 80, 0.1) !important;
+    border-color: #4CAF50 !important;
 }
 
-.btn-icon.cloud-sync-off {
-    color: #f44336;
-    background: rgba(244, 67, 54, 0.1);
+#cloudSyncToggle.cloud-sync-off {
+    color: #f44336 !important;
+    background: rgba(244, 67, 54, 0.1) !important;
+    border-color: #f44336 !important;
 }
 
-.btn-icon.cloud-sync-disabled {
-    color: #999;
-    background: rgba(153, 153, 153, 0.1);
+#cloudSyncToggle.cloud-sync-disabled {
+    color: #999 !important;
+    background: rgba(153, 153, 153, 0.1) !important;
+    border-color: #999 !important;
 }
 
 /* ==================== AI 问诊样式 ==================== */
