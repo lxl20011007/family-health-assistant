@@ -86,14 +86,14 @@ class FamilyHealthApp {
     
     // 开始云同步
     startCloudSync() {
-        console.log('App: 开始云同步');
-        this.uploadAllLocalDataToCloud();
+        console.log('App: 开始云同步（已禁用）');
+        // this.uploadAllLocalDataToCloud(); // 完全禁用
     }
     
     // 加入家庭后的回调
     onFamilyJoined() {
-        console.log('App: 已加入家庭，开始同步数据');
-        this.uploadAllLocalDataToCloud();
+        console.log('App: 已加入家庭，同步已禁用');
+        // this.uploadAllLocalDataToCloud(); // 完全禁用
         this.loadMembers();
     }
     
@@ -122,23 +122,22 @@ class FamilyHealthApp {
         this.uploadAllLocalDataToCloud();
 
         // 每 30 秒检查一次是否需要同步
-        setInterval(() => {
-            this.autoSyncFromCloud();
-        }, 30000);
+        // 完全禁用自动同步定时器
+        // setInterval(() => {
+        //     this.autoSyncFromCloud();
+        // }, 30000);
 
-        // 页面获得焦点时立即同步（暂时禁用）
-        window.addEventListener('focus', () => {
-            console.log('页面获得焦点，同步已禁用');
-            // this.autoSyncFromCloud(); // 暂时禁用
-        });
+        // 页面获得焦点时立即同步（完全禁用）
+        // window.addEventListener('focus', () => {
+        //     this.autoSyncFromCloud();
+        // });
 
-        // 页面可见性变化时同步（暂时禁用）
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden) {
-                console.log('页面变为可见，同步已禁用');
-                // this.autoSyncFromCloud(); // 暂时禁用
-            }
-        });
+        // 页面可见性变化时同步（完全禁用）
+        // document.addEventListener('visibilitychange', () => {
+        //     if (!document.hidden) {
+        //         this.autoSyncFromCloud();
+        //     }
+        // });
     }
 
     // 上传所有本地数据到云端（首次同步）
