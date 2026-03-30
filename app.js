@@ -464,10 +464,20 @@ class FamilyHealthApp {
                 addExerciseBtn.addEventListener('click', () => this.showAddExerciseModal());
             }
 
-            // 云同步配置按钮
+            // 云同步配置按钮 - 更可靠的事件绑定
             const cloudConfigBtn = document.getElementById('cloudConfigBtn');
             if (cloudConfigBtn) {
-                cloudConfigBtn.addEventListener('click', () => this.showCloudSyncModal());
+                // 移除旧的事件监听器
+                const newConfigBtn = cloudConfigBtn.cloneNode(true);
+                cloudConfigBtn.parentNode.replaceChild(newConfigBtn, cloudConfigBtn);
+                
+                // 重新绑定事件
+                newConfigBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🔧 配置按钮被点击');
+                    this.showCloudSyncModal();
+                });
             }
 
             // 云同步开关按钮 - 更可靠的事件绑定
