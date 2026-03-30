@@ -1996,6 +1996,7 @@ class FamilyHealthApp {
 
         submitBtn.addEventListener('click', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             // 保存成功后关闭弹窗
             if (this.saveHealthRecord()) {
                 closeModal();
@@ -2004,9 +2005,15 @@ class FamilyHealthApp {
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             if (this.saveHealthRecord()) {
                 closeModal();
             }
+        });
+        
+        // 阻止默认行为
+        modal.addEventListener('click', (e) => {
+            e.preventDefault();
         });
     }
 
