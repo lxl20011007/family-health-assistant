@@ -1001,10 +1001,11 @@ class FamilyHealthApp {
             }).join('');
             
             // 收集所有记录ID用于删除
-            const allIds = group.records.map(r => `"${r.id}"`).join(',');
+            const allIds = group.records.map(r => r.id);
+            const allIdsJson = JSON.stringify(allIds);
             
             return `
-                <div class="diet-record meal-group" data-ids='${allIds}'>
+                <div class="diet-record meal-group" data-ids='${allIdsJson}'>
                     <div class="diet-record-header">
                         <div class="diet-meal-info">
                             <span class="member-name" style="color: #667eea; font-weight: 600;">${memberName}</span>
@@ -1014,10 +1015,10 @@ class FamilyHealthApp {
                             <span class="diet-time">${time}</span>
                         </div>
                         <div class="card-actions">
-                            <button class="btn btn-primary btn-sm edit-diet-group" data-ids='${allIds}'>
+                            <button class="btn btn-primary btn-sm edit-diet-group" data-ids='${allIdsJson}'>
                                 <i class="fas fa-edit"></i> 编辑
                             </button>
-                            <button class="btn btn-danger btn-sm delete-diet-group" data-ids='${allIds}'>
+                            <button class="btn btn-danger btn-sm delete-diet-group" data-ids='${allIdsJson}'>
                                 <i class="fas fa-trash"></i> 删除
                             </button>
                         </div>
@@ -1065,6 +1066,8 @@ class FamilyHealthApp {
                 const ids = JSON.parse(e.currentTarget.dataset.ids);
                 if (confirm(`确定要删除这餐（共${ids.length}条记录）的饮食记录吗？`)) {
                     ids.forEach(id => this.deleteDietRecord(id));
+                    // 重新加载
+                    this.loadDietRecords();
                 }
             });
         });
