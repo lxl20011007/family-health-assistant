@@ -3777,7 +3777,17 @@ class FamilyHealthApp {
         supabaseClient.isOnline = !supabaseClient.isOnline;
         
         console.log('切换后状态:', supabaseClient.isOnline);
-        this.updateCloudSyncToggle();
+        
+        // 确保 updateCloudSyncToggle 被调用
+        if (this.updateCloudSyncToggle) {
+            this.updateCloudSyncToggle();
+        } else if (window.app && window.app.updateCloudSyncToggle) {
+            window.app.updateCloudSyncToggle();
+        } else {
+            console.error('updateCloudSyncToggle 方法未找到');
+            // 手动更新按钮
+            this.manualUpdateCloudSyncToggle();
+        }
         
         const status = supabaseClient.isOnline ? '开启' : '关闭';
         console.log(`云同步已${status}`);
@@ -3794,6 +3804,22 @@ class FamilyHealthApp {
         `;
         document.body.appendChild(statusEl);
         setTimeout(() => statusEl.remove(), 2000);
+    }
+    
+    // 手动更新云同步开关显示
+    manualUpdateCloudSyncToggle() {
+        const toggleBtn = document.getElementById('cloudSyncToggle');
+        if (!toggleBtn || !window.supabaseClient) return;
+        
+        toggleBtn.classList.remove('cloud-sync-on', 'cloud-sync-off');
+        
+        if (window.supabaseClient.isOnline) {
+            toggleBtn.classList.add('cloud-sync-on');
+            toggleBtn.title = '云同步已开启（点击关闭）';
+        } else {
+            toggleBtn.classList.add('cloud-sync-off');
+            toggleBtn.title = '云同步已关闭（点击开启）';
+        }
     }
     
     // 更新云同步开关显示
