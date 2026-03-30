@@ -3748,27 +3748,70 @@ class FamilyHealthApp {
     
     // 切换云同步开关
     toggleCloudSync() {
-        if (window.supabaseClient) {
-            window.supabaseClient.isOnline = !window.supabaseClient.isOnline;
-            this.updateCloudSyncToggle();
-            
-            const status = window.supabaseClient.isOnline ? '开启' : '关闭';
-            console.log(`云同步已${status}`);
-            alert(`云同步已${status}`);
+        const supabaseClient = window.supabaseClient;
+        if (!supabaseClient) {
+            alert('Supabase 未初始化，请先配置云同步');
+            return;
         }
+        
+        // 检查是否已认证
+        const isAuthenticated = supabaseClient.isAuthenticated || 
+                               (supabaseClient.currentUser && supabaseClient.currentUser.id);
+        
+        if (!isAuthenticated) {
+            alert('请先登录才能使用云同步');
+            return;
+        }
+        
+        // 切换状态
+        supabaseClient.isOnline = !supabaseClient.isOnline;
+        this.updateCloudSyncToggle();
+        
+        const status = supabaseClient.isOnline ? '开启' : '关闭';
+        console.log(`云同步已${status}`);
+        
+        // 显示状态提示
+        const statusEl = document.createElement('div');
+        statusEl.className = 'status-toast';
+        statusEl.textContent = `云同步已${status}`;
+        statusEl.style.cssText = `
+            position: fixed; top: 20px; right: 20px;
+            background: ${supabaseClient.isOnline ? '#4CAF50' : '#f44336'};
+            color: white; padding: 10px 20px; border-radius: 5px;
+            z-index: 1000; font-size: 14px;
+        `;
+        document.body.appendChild(statusEl);
+        setTimeout(() => statusEl.remove(), 2000);
     }
     
     // 更新云同步开关显示
     updateCloudSyncToggle() {
         const toggleBtn = document.getElementById('cloudSyncToggle');
-        if (!toggleBtn || !window.supabaseClient) return;
+        if (!toggleBtn) return;
         
+        // 重置所有样式
         toggleBtn.classList.remove('cloud-sync-on', 'cloud-sync-off', 'cloud-sync-disabled');
         
-        if (!window.supabaseClient.supabase || !window.supabaseClient.isAuthenticated) {
+        // 检查 Supabase 客户端状态
+        const supabaseClient = window.supabaseClient;
+        if (!supabaseClient) {
+            toggleBtn.classList.add('cloud-sync-disabled');
+            toggleBtn.title = 'Supabase 未初始化';
+            return;
+        }
+        
+        // 检查是否已认证
+        const isAuthenticated = supabaseClient.isAuthenticated || 
+                               (supabaseClient.currentUser && supabaseClient.currentUser.id);
+        
+        if (!isAuthenticated) {
             toggleBtn.classList.add('cloud-sync-disabled');
             toggleBtn.title = '未登录，无法使用云同步';
-        } else if (window.supabaseClient.isOnline) {
+            return;
+        }
+        
+        // 根据 isOnline 状态显示
+        if (supabaseClient.isOnline) {
             toggleBtn.classList.add('cloud-sync-on');
             toggleBtn.title = '云同步已开启（点击关闭）';
         } else {
