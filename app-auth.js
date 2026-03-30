@@ -123,6 +123,10 @@ class AuthManager {
             const loginBtn = document.getElementById('loginBtn');
             if (loginBtn) loginBtn.style.display = 'none';
             
+            // 隐藏云同步配置按钮
+            const cloudConfigBtn = document.getElementById('cloudConfigBtn');
+            if (cloudConfigBtn) cloudConfigBtn.style.display = 'none';
+            
             // 显示用户信息区域（包含家庭按钮、邮箱、退出）
             const userInfoEl = document.getElementById('userInfo');
             if (userInfoEl) userInfoEl.style.display = 'flex';
@@ -130,6 +134,10 @@ class AuthManager {
             // 显示家庭按钮
             const familyBtn = document.getElementById('familyBtn');
             if (familyBtn) familyBtn.style.display = 'block';
+            
+            // 显示云同步开关按钮
+            const cloudSyncToggle = document.getElementById('cloudSyncToggle');
+            if (cloudSyncToggle) cloudSyncToggle.style.display = 'block';
         }
         
         // 检查是否需要配置云同步
@@ -144,6 +152,10 @@ class AuthManager {
         const loginBtn = document.getElementById('loginBtn');
         if (loginBtn) loginBtn.style.display = 'block';
         
+        // 显示云同步配置按钮
+        const cloudConfigBtn = document.getElementById('cloudConfigBtn');
+        if (cloudConfigBtn) cloudConfigBtn.style.display = 'block';
+        
         // 隐藏用户信息区域
         const userInfoEl = document.getElementById('userInfo');
         if (userInfoEl) userInfoEl.style.display = 'none';
@@ -151,6 +163,10 @@ class AuthManager {
         // 隐藏家庭按钮
         const familyBtn = document.getElementById('familyBtn');
         if (familyBtn) familyBtn.style.display = 'none';
+        
+        // 隐藏云同步按钮
+        const cloudSyncToggle = document.getElementById('cloudSyncToggle');
+        if (cloudSyncToggle) cloudSyncToggle.style.display = 'none';
         
         // 隐藏云同步配置提示
         const cloudSyncInfo = document.getElementById('cloudSyncInfo');

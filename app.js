@@ -323,6 +323,12 @@ class FamilyHealthApp {
                 addExerciseBtn.addEventListener('click', () => this.showAddExerciseModal());
             }
 
+            // 云同步配置按钮
+            const cloudConfigBtn = document.getElementById('cloudConfigBtn');
+            if (cloudConfigBtn) {
+                cloudConfigBtn.addEventListener('click', () => this.showCloudSyncModal());
+            }
+
             // 云同步开关按钮
             const cloudSyncToggle = document.getElementById('cloudSyncToggle');
             if (cloudSyncToggle) {
