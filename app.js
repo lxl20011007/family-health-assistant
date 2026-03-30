@@ -225,6 +225,10 @@ class FamilyHealthApp {
         try {
             console.log('🔄 开始自动同步数据...');
 
+            // 暂时禁用自动同步，避免数据暴增
+            console.log('⚠️ 自动同步已临时禁用，请手动同步');
+            return;
+
             // 拉取所有数据
             await this.syncFamilyMembers();
             await this.syncHealthRecords();
