@@ -72,10 +72,27 @@ class FamilyManager {
         
         // 检查当前用户是否有家庭
         if (this.supabase?.isUserAuthenticated()) {
-            const family = await this.supabase.getCurrentFamily();
-            if (family) {
+            // 先检查本地存储的家庭信息
+            const localFamily = localStorage.getItem('currentFamily');
+            if (localFamily) {
+                try {
+                    this.currentFamily = JSON.parse(localFamily);
+                } catch (e) {
+                    localStorage.removeItem('currentFamily');
+                }
+            }
+            
+            // 如果本地没有，再从云端获取
+            if (!this.currentFamily) {
+                const family = await this.supabase.getCurrentFamily();
+                if (family) {
+                    this.currentFamily = family;
+                    localStorage.setItem('currentFamily', JSON.stringify(family));
+                }
+            }
+            
+            if (this.currentFamily) {
                 // 已加入家庭 → 直接跳转到成员管理页面
-                this.currentFamily = family;
                 this.closeFamilyModal();
                 if (window.app) {
                     window.app.switchTab('members');
@@ -190,6 +207,8 @@ class FamilyManager {
             
             if (result.success) {
                 this.currentFamily = result.family;
+                // 保存到本地存储
+                localStorage.setItem('currentFamily', JSON.stringify(result.family));
                 messageEl.textContent = '创建成功！';
                 messageEl.className = 'auth-message success';
                 
@@ -232,6 +251,8 @@ class FamilyManager {
             
             if (result.success) {
                 this.currentFamily = result.family;
+                // 保存到本地存储
+                localStorage.setItem('currentFamily', JSON.stringify(result.family));
                 messageEl.textContent = '加入成功！';
                 messageEl.className = 'auth-message success';
                 

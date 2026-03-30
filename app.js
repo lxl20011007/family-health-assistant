@@ -753,6 +753,23 @@ class FamilyHealthApp {
         this.deleteDietRecordFromCloud(recordId);
     }
 
+    // 编辑饮食记录
+    editDietRecord(recordId) {
+        const records = this.getDietRecords();
+        const record = records.find(r => r.id === recordId);
+        
+        if (!record) {
+            alert('未找到该记录');
+            return;
+        }
+        
+        // 简单提示：编辑功能需要重新添加记录
+        alert('饮食记录编辑功能：\n\n建议删除后重新添加记录，以确保数据准确性。\n\n点击确定后将打开饮食添加页面。');
+        
+        // 可以跳转到饮食添加页面
+        this.showAddDietModal();
+    }
+
     // 从云端删除饮食记录
     async deleteDietRecordFromCloud(recordId) {
         if (typeof supabaseClient === 'undefined' || !supabaseClient.isConnected) {
@@ -996,9 +1013,14 @@ class FamilyHealthApp {
                             </span>
                             <span class="diet-time">${time}</span>
                         </div>
-                        <button class="btn-icon delete-diet-group" data-ids='${allIds}'>
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        <div class="card-actions">
+                            <button class="btn btn-primary btn-sm edit-diet-group" data-ids='${allIds}'>
+                                <i class="fas fa-edit"></i> 编辑
+                            </button>
+                            <button class="btn btn-danger btn-sm delete-diet-group" data-ids='${allIds}'>
+                                <i class="fas fa-trash"></i> 删除
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="meal-food-list">
@@ -1043,6 +1065,17 @@ class FamilyHealthApp {
                 const ids = JSON.parse(e.currentTarget.dataset.ids);
                 if (confirm(`确定要删除这餐（共${ids.length}条记录）的饮食记录吗？`)) {
                     ids.forEach(id => this.deleteDietRecord(id));
+                }
+            });
+        });
+        
+        // 绑定编辑按钮事件
+        listDiv.querySelectorAll('.edit-diet-group').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const ids = JSON.parse(e.currentTarget.dataset.ids);
+                // 获取第一条记录的ID，找到整条记录进行编辑
+                if (ids.length > 0) {
+                    this.editDietRecord(ids[0]);
                 }
             });
         });
@@ -2915,6 +2948,9 @@ class FamilyHealthApp {
                     <i class="fas ${icon}"></i> ${memberName} - ${exercise.type}
                 </div>
                 <div class="card-actions">
+                    <button class="btn btn-primary btn-sm edit-exercise" data-id="${exercise.id}">
+                        <i class="fas fa-edit"></i> 编辑
+                    </button>
                     <button class="btn btn-danger btn-sm delete-exercise" data-id="${exercise.id}">
                         <i class="fas fa-trash"></i> 删除
                     </button>
@@ -2943,8 +2979,22 @@ class FamilyHealthApp {
             e.stopPropagation();
             this.deleteExercise(exercise.id);
         });
+        
+        card.querySelector('.edit-exercise').addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.editExercise(exercise);
+        });
 
         return card;
+    }
+    
+    // 编辑运动记录
+    editExercise(exercise) {
+        // 简单提示：编辑功能需要重新添加记录
+        alert('运动记录编辑功能：\n\n建议删除后重新添加记录，以确保数据准确性。\n\n点击确定后将打开运动添加页面。');
+        
+        // 可以跳转到运动添加页面
+        this.showAddExerciseModal();
     }
 
     // 显示添加饮食记录模态框 - 支持多食物和一键选择餐次
