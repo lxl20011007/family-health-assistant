@@ -1600,13 +1600,24 @@ class FamilyHealthApp {
 
     // 显示添加健康记录模态框
     showAddHealthModal() {
-        if (!this.currentMemberId) {
-            alert('请先选择家庭成员！');
+        const members = this.getMembers();
+        if (members.length === 0) {
+            alert('请先添加家庭成员！');
             return;
+        }
+
+        // 如果没有选择成员，默认选择第一个
+        if (!this.currentMemberId) {
+            this.currentMemberId = members[0].id;
         }
 
         const member = this.getMembers().find(m => m.id === this.currentMemberId);
         const age = member ? this.calculateAge(member.birthDate) : null;
+
+        // 生成成员选择选项
+        const memberOptions = members.map(m => 
+            `<option value="${m.id}" ${m.id === this.currentMemberId ? 'selected' : ''}>${m.name}</option>`
+        ).join('');
 
         const overlay = document.createElement('div');
         overlay.className = 'modal-overlay active';
@@ -1621,6 +1632,13 @@ class FamilyHealthApp {
                 </div>
                 <div class="modal-body">
                     <form id="healthForm">
+                        <div class="form-group">
+                            <label for="healthMember">家庭成员 *</label>
+                            <select id="healthMember" class="form-control" required>
+                                ${memberOptions}
+                            </select>
+                        </div>
+                        
                         <div class="form-group">
                             <label for="healthType">记录类型 *</label>
                             <select id="healthType" class="form-control" required>
@@ -1983,6 +2001,13 @@ class FamilyHealthApp {
 
     // 保存健康记录
     saveHealthRecord() {
+        // 使用表单中选择的成员
+        const memberId = document.getElementById('healthMember').value;
+        if (!memberId) {
+            alert('请选择家庭成员！');
+            return;
+        }
+        
         const type = document.getElementById('healthType').value;
         const notes = document.getElementById('healthNotes').value.trim();
         const recordedAt = document.getElementById('recordedAt').value;
@@ -2035,7 +2060,7 @@ class FamilyHealthApp {
         const records = this.getHealthRecords();
         const newRecord = {
             id: Date.now().toString(),
-            memberId: this.currentMemberId,
+            memberId: memberId,
             type,
             value: type !== 'blood_pressure' ? value : null,
             systolic: type === 'blood_pressure' ? systolic : null,
@@ -2671,10 +2696,21 @@ class FamilyHealthApp {
 
     // 显示添加饮食记录模态框 - 支持多食物和一键选择餐次
     showAddDietModal() {
-        if (!this.currentMemberId) {
-            alert('请先选择家庭成员');
+        const members = this.getMembers();
+        if (members.length === 0) {
+            alert('请先添加家庭成员！');
             return;
         }
+        
+        // 如果没有选择成员，默认选择第一个
+        if (!this.currentMemberId) {
+            this.currentMemberId = members[0].id;
+        }
+        
+        // 生成成员选择选项
+        const memberOptions = members.map(m => 
+            `<option value="${m.id}" ${m.id === this.currentMemberId ? 'selected' : ''}>${m.name}</option>`
+        ).join('');
         
         // 获取当前时间，自动判断餐次
         const now = new Date();
@@ -2723,6 +2759,14 @@ class FamilyHealthApp {
                                 </button>
                             </div>
                             <input type="hidden" id="dietMealType" value="${defaultMealType}">
+                        </div>
+                        
+                        <!-- 家庭成员选择 -->
+                        <div class="form-group">
+                            <label><i class="fas fa-user"></i> 选择成员</label>
+                            <select id="dietMember" class="form-control">
+                                ${memberOptions}
+                            </select>
                         </div>
                         
                         <!-- 食物列表 -->
@@ -2974,6 +3018,12 @@ class FamilyHealthApp {
         
         // 保存记录
         saveBtn.addEventListener('click', () => {
+            const memberId = modalContainer.querySelector('#dietMember').value;
+            if (!memberId) {
+                alert('请选择家庭成员！');
+                return;
+            }
+            
             const mealType = mealTypeInput.value;
             const notes = modalContainer.querySelector('#dietNotes').value;
             const time = new Date().toTimeString().slice(0, 5);
@@ -3032,7 +3082,7 @@ class FamilyHealthApp {
             // 为每种食物创建一条记录
             foods.forEach(food => {
                 const record = {
-                    memberId: this.currentMemberId,
+                    memberId: memberId,
                     foodName: food.name,
                     quantity: food.quantity,
                     unit: food.unit,
@@ -3056,10 +3106,21 @@ class FamilyHealthApp {
 
     // 显示添加运动记录模态框
     showAddExerciseModal() {
-        if (!this.currentMemberId) {
-            alert('请先选择家庭成员！');
+        const members = this.getMembers();
+        if (members.length === 0) {
+            alert('请先添加家庭成员！');
             return;
         }
+        
+        // 如果没有选择成员，默认选择第一个
+        if (!this.currentMemberId) {
+            this.currentMemberId = members[0].id;
+        }
+        
+        // 生成成员选择选项
+        const memberOptions = members.map(m => 
+            `<option value="${m.id}" ${m.id === this.currentMemberId ? 'selected' : ''}>${m.name}</option>`
+        ).join('');
 
         // 获取运动类型列表
         const exerciseTypes = typeof getExerciseTypeList === 'function' ? getExerciseTypeList() : [
@@ -3083,6 +3144,13 @@ class FamilyHealthApp {
                     </div>
                     <div class="modal-body">
                         <form id="exerciseForm">
+                            <div class="form-group">
+                                <label for="exerciseMember"><i class="fas fa-user"></i> 选择成员 *</label>
+                                <select id="exerciseMember" class="form-control" required>
+                                    ${memberOptions}
+                                </select>
+                            </div>
+                            
                             <div class="form-group">
                                 <label for="exerciseType"><i class="fas fa-dumbbell"></i> 运动类型 *</label>
                                 <select id="exerciseType" class="form-control" required>
@@ -3178,6 +3246,12 @@ class FamilyHealthApp {
         form.addEventListener('submit', (e) => {
             e.preventDefault();
 
+            const memberId = document.getElementById('exerciseMember').value;
+            if (!memberId) {
+                alert('请选择家庭成员！');
+                return;
+            }
+
             const selectVal = typeSelect.value;
             const customVal = customInput.value.trim();
             const exType = selectVal === '__custom__' ? customVal : selectVal;
@@ -3200,7 +3274,7 @@ class FamilyHealthApp {
             const exercises = this.getExercises();
             const newExercise = {
                 id: Date.now().toString(),
-                memberId: this.currentMemberId,
+                memberId: memberId,
                 type: exType,
                 duration: duration,
                 exerciseDate: new Date().toISOString().split('T')[0],
