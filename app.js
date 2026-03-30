@@ -596,13 +596,33 @@ class FamilyHealthApp {
         });
         
         // 加载对应标签页的数据
-        if (tabName === 'diet') {
-            this.loadDietRecords();
-        } else if (tabName === 'ai-consultation') {
-            // 确保AI助手已初始化
-            if (typeof aiAssistant !== 'undefined' && aiAssistant) {
-                aiAssistant.updateUI();
-            }
+        switch (tabName) {
+            case 'dashboard':
+                // 首页 - 更新统计数据
+                this.updateStats();
+                break;
+            case 'members':
+                // 成员管理 - 重新加载成员列表
+                this.loadMembers();
+                break;
+            case 'health':
+                // 健康记录 - 重新加载
+                this.loadHealthRecords();
+                break;
+            case 'diet':
+                // 饮食记录 - 重新加载
+                this.loadDietRecords();
+                break;
+            case 'exercise':
+                // 运动记录 - 重新加载
+                this.loadExercises();
+                break;
+            case 'ai-consultation':
+                // AI助手 - 确保已初始化
+                if (typeof aiAssistant !== 'undefined' && aiAssistant) {
+                    aiAssistant.updateUI();
+                }
+                break;
         }
     }
 
