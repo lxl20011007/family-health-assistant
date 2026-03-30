@@ -2088,23 +2088,41 @@ class FamilyHealthApp {
         }
 
         try {
+            // 确保 ID 是有效的 UUID 格式
+            let recordId = record.id;
+            if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(recordId)) {
+                recordId = this.generateUUID();
+            }
+            
             const cloudRecord = {
-                id: record.id,
+                id: recordId,
                 member_id: record.memberId,
-                type: record.type,
+                record_type: record.type,
                 value: record.value,
-                secondary_value: record.systolic || record.diastolic || null,
+                systolic: record.systolic,
+                diastolic: record.diastolic,
+                unit: record.unit || '',
                 recorded_at: record.recordedAt ? record.recordedAt.split('T')[0] : new Date().toISOString().split('T')[0],
-                notes: record.notes,
-                created_at: record.createdAt,
+                notes: record.notes || '',
+                created_at: record.createdAt || new Date().toISOString(),
                 updated_at: new Date().toISOString()
             };
 
-            await supabaseClient.pushToCloud('health_records', cloudRecord, record.id);
-            console.log('✅ 健康记录已同步到云端');
+            const result = await supabaseClient.pushToCloud('health_records', cloudRecord, recordId);
+            if (result.success) {
+                console.log('✅ 健康记录已同步到云端:', recordId);
+            }
         } catch (error) {
             console.error('❌ 健康记录同步失败:', error);
         }
+    }
+    
+    // 生成 UUID
+    generateUUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
     }
 
     // 删除健康记录
