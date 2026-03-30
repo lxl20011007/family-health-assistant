@@ -3798,8 +3798,13 @@ class FamilyHealthApp {
     
     // 更新云同步开关显示
     updateCloudSyncToggle() {
+        console.log('updateCloudSyncToggle 被调用');
+        
         const toggleBtn = document.getElementById('cloudSyncToggle');
-        if (!toggleBtn) return;
+        if (!toggleBtn) {
+            console.error('云同步开关按钮未找到');
+            return;
+        }
         
         // 重置所有样式
         toggleBtn.classList.remove('cloud-sync-on', 'cloud-sync-off', 'cloud-sync-disabled');
@@ -3807,6 +3812,7 @@ class FamilyHealthApp {
         // 检查 Supabase 客户端状态
         const supabaseClient = window.supabaseClient;
         if (!supabaseClient) {
+            console.error('Supabase 客户端未找到');
             toggleBtn.classList.add('cloud-sync-disabled');
             toggleBtn.title = 'Supabase 未初始化';
             return;
@@ -3817,19 +3823,26 @@ class FamilyHealthApp {
                                (supabaseClient.currentUser && supabaseClient.currentUser.id);
         
         if (!isAuthenticated) {
+            console.log('用户未认证');
             toggleBtn.classList.add('cloud-sync-disabled');
             toggleBtn.title = '未登录，无法使用云同步';
             return;
         }
         
+        console.log('当前 isOnline 状态:', supabaseClient.isOnline);
+        
         // 根据 isOnline 状态显示
         if (supabaseClient.isOnline) {
+            console.log('设置为绿色（开启）');
             toggleBtn.classList.add('cloud-sync-on');
             toggleBtn.title = '云同步已开启（点击关闭）';
         } else {
+            console.log('设置为红色（关闭）');
             toggleBtn.classList.add('cloud-sync-off');
             toggleBtn.title = '云同步已关闭（点击开启）';
         }
+        
+        console.log('按钮最终样式:', toggleBtn.className);
     }
 }
 
