@@ -123,6 +123,9 @@ class FamilyManager {
 
     // 显示家庭信息
     async showFamilyInfo() {
+        // 加入家庭后关闭弹窗
+        this.closeFamilyModal();
+        
         document.getElementById('noFamilySection').style.display = 'none';
         document.getElementById('createFamilyForm').style.display = 'none';
         document.getElementById('joinFamilyForm').style.display = 'none';

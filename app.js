@@ -809,13 +809,8 @@ class FamilyHealthApp {
 
     // 加载饮食记录
     loadDietRecords() {
-        if (!this.currentMemberId) {
-            this.showDietEmptyState('请先选择家庭成员');
-            return;
-        }
-        
         const date = document.getElementById('dietDate') ? document.getElementById('dietDate').value : new Date().toISOString().split('T')[0];
-        const records = this.getDietRecords(this.currentMemberId, date);
+        const records = this.getDietRecords(null, date);
         
         if (records.length === 0) {
             this.showDietEmptyState('暂无饮食记录');
@@ -1469,23 +1464,17 @@ class FamilyHealthApp {
 
     // 加载健康记录
     loadHealthRecords() {
-        if (!this.currentMemberId) {
-            document.getElementById('healthList').innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-heartbeat"></i>
-                    <p>请先选择家庭成员</p>
-                </div>
-            `;
-            return;
-        }
-
-        const records = this.getHealthRecords(this.currentMemberId);
-        const filterType = document.getElementById('healthFilter').value;
+        // 获取所有健康记录，不过滤成员
+        const records = this.getHealthRecords();
+        
+        const filterType = document.getElementById('healthFilter')?.value || 'all';
         const filteredRecords = filterType === 'all' 
             ? records 
             : records.filter(record => record.type === filterType);
 
         const healthList = document.getElementById('healthList');
+        if (!healthList) return;
+        
         healthList.innerHTML = '';
 
         if (filteredRecords.length === 0) {
@@ -2818,21 +2807,12 @@ class FamilyHealthApp {
 
     // 加载运动记录 - 按日期筛选并显示总热量
     loadExercises() {
-        if (!this.currentMemberId) {
-            document.getElementById('exerciseList').innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-dumbbell"></i>
-                    <p>请先选择家庭成员</p>
-                </div>
-            `;
-            return;
-        }
-
         const date = document.getElementById('exerciseDate') ? document.getElementById('exerciseDate').value : new Date().toISOString().split('T')[0];
-        const exercises = this.getExercises(this.currentMemberId);
+        const exercises = this.getExercises(null);
         const filteredExercises = exercises.filter(ex => ex.exerciseDate === date);
 
         const exerciseList = document.getElementById('exerciseList');
+        if (!exerciseList) return;
         exerciseList.innerHTML = '';
 
         if (filteredExercises.length === 0) {
