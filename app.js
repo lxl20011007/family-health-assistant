@@ -150,85 +150,42 @@ class FamilyHealthApp {
         // 检查是否已同步过
         const lastSyncTime = localStorage.getItem('lastSyncTime');
         const lastSync = lastSyncTime ? new Date(lastSyncTime) : null;
-        console.log('上次同步时间:', lastSync || '从未同步');
+        console.log('========== 同步开始 ==========');
+        console.log('上次同步时间:', lastSync ? lastSync.toLocaleString() : '从未同步');
 
         try {
-            console.log('🔄 开始上传本地数据到云端...');
+            console.log('🔄 开始检查需要同步的数据...');
 
-            // 上传家庭成员 - 只同步新增或修改的
+            // 上传家庭成员 - 只同步新增或未同步的
             const members = this.getMembers();
             let membersSynced = 0;
             for (const member of members) {
-                // 如果从未同步，或者记录是最近创建的，同步它
-                const createdAt = new Date(member.createdAt || member.createdAt);
-                const isNew = !lastSync || createdAt > lastSync;
-                if (isNew || !member.synced) {
+                const createdAt = member.createdAt ? new Date(member.createdAt) : new Date();
+                const isNew = !lastSync || createdAt.getTime() > lastSync.getTime();
+                const notSynced = !member.synced;
+                
+                console.log(`成员 ${member.name}: createdAt=${createdAt.toLocaleString()}, isNew=${isNew}, notSynced=${notSynced}`);
+                
+                if (isNew || notSynced) {
                     await this.syncMemberToCloud(member, 'create');
                     member.synced = true;
                     membersSynced++;
+                    console.log(`  → 需要同步`);
+                } else {
+                    console.log(`  → 跳过（已同步）`);
                 }
             }
             // 保存同步状态
             if (membersSynced > 0) {
                 this.saveMembers(members);
             }
-            console.log(`📤 上传了 ${membersSynced} 个新家庭成员`);
-
-            // 上传健康记录 - 只同步新增的
-            const healthRecords = this.getHealthRecords();
-            let healthSynced = 0;
-            for (const record of healthRecords) {
-                const createdAt = new Date(record.createdAt || Date.now());
-                const isNew = !lastSync || createdAt > lastSync;
-                if (isNew || !record.synced) {
-                    await this.syncHealthRecordToCloud(record);
-                    record.synced = true;
-                    healthSynced++;
-                }
-            }
-            if (healthSynced > 0) {
-                this.saveHealthRecords(healthRecords);
-            }
-            console.log(`📤 上传了 ${healthSynced} 条新健康记录`);
-
-            // 上传饮食记录
-            const dietRecords = this.getDietRecords();
-            let dietSynced = 0;
-            for (const record of dietRecords) {
-                const createdAt = new Date(record.date || Date.now());
-                const isNew = !lastSync || createdAt > lastSync;
-                if (isNew || !record.synced) {
-                    await this.syncDietRecordToCloud(record);
-                    record.synced = true;
-                    dietSynced++;
-                }
-            }
-            if (dietSynced > 0) {
-                this.saveDietRecords(dietRecords);
-            }
-            console.log(`📤 上传了 ${dietSynced} 条新饮食记录`);
-
-            // 上传运动记录
-            const exercises = this.getExercises();
-            let exerciseSynced = 0;
-            for (const exercise of exercises) {
-                const recordedAt = new Date(exercise.exerciseDate || Date.now());
-                const isNew = !lastSync || recordedAt > lastSync;
-                if (isNew || !exercise.synced) {
-                    await this.syncExerciseToCloud(exercise);
-                    exercise.synced = true;
-                    exerciseSynced++;
-                }
-            }
-            if (exerciseSynced > 0) {
-                this.saveExercises(exercises);
-            }
-            console.log(`📤 上传了 ${exerciseSynced} 条新运动记录`);
+            console.log(`📤 本次同步了 ${membersSynced} 个家庭成员`);
 
             // 更新同步时间
             localStorage.setItem('lastSyncTime', new Date().toISOString());
+            console.log('========== 同步完成 ==========');
             
-            console.log('✅ 本次同步完成！共上传新数据');
+            return Promise.resolve();
         } catch (error) {
             console.error('❌ 上传本地数据失败:', error);
             return Promise.reject(error);
