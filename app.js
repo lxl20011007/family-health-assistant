@@ -325,12 +325,6 @@ class FamilyHealthApp {
                 cloudSyncBtn.addEventListener('click', () => this.showCloudSyncModal());
             }
 
-            // 清空数据按钮
-            const clearAllDataBtn = document.getElementById('clearAllDataBtn');
-            if (clearAllDataBtn) {
-                clearAllDataBtn.addEventListener('click', () => this.showClearDataModal());
-            }
-
             // 健康记录筛选
             const healthFilter = document.getElementById('healthFilter');
             if (healthFilter) {

@@ -70,19 +70,30 @@ class FamilyManager {
             window.familyManager = this;
         }
         
-        document.getElementById('familyModal').style.display = 'block';
-        
         // 检查当前用户是否有家庭
         if (this.supabase?.isUserAuthenticated()) {
             const family = await this.supabase.getCurrentFamily();
             if (family) {
+                // 已加入家庭 → 直接跳转到成员管理页面
                 this.currentFamily = family;
-                this.showFamilyInfo();
-            } else {
-                this.showNoFamilySection();
+                this.closeFamilyModal();
+                if (window.app) {
+                    window.app.switchTab('members');
+                }
+                return;
             }
-        } else {
-            this.showNoFamilySection();
+        }
+        
+        // 未加入家庭 → 显示创建/加入弹窗
+        document.getElementById('familyModal').style.display = 'block';
+        this.showNoFamilySection();
+    }
+    
+    // 关闭家庭模态框
+    closeFamilyModal() {
+        const modal = document.getElementById('familyModal');
+        if (modal) {
+            modal.style.display = 'none';
         }
     }
 
@@ -182,6 +193,8 @@ class FamilyManager {
                 setTimeout(() => {
                     this.showFamilyInfo();
                     this.onFamilyJoined();
+                    // 创建成功后关闭模态框
+                    this.closeFamilyModal();
                 }, 1000);
             } else {
                 messageEl.textContent = result.error || '创建失败';
@@ -222,6 +235,8 @@ class FamilyManager {
                 setTimeout(() => {
                     this.showFamilyInfo();
                     this.onFamilyJoined();
+                    // 加入成功后关闭模态框
+                    this.closeFamilyModal();
                 }, 1000);
             } else {
                 messageEl.textContent = result.error || '加入失败';

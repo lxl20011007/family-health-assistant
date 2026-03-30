@@ -107,35 +107,30 @@ class AuthManager {
 
     // 显示已认证的 UI
     showAuthenticatedUI() {
-        console.log('Auth: 显示已认证 UI - 开始更新');
+        console.log('Auth: 显示已认证 UI');
+        
+        // 确保登录弹窗是关闭的
+        const authModal = document.getElementById('authModal');
+        if (authModal) {
+            authModal.style.display = 'none';
+        }
         
         // 更新用户信息显示
         const userInfo = this.supabase.getUserInfo();
-        console.log('Auth: 用户信息', userInfo);
         
         if (userInfo) {
-            const userEmailEl = document.getElementById('userEmail');
+            // 隐藏登录按钮
+            const loginBtn = document.getElementById('loginBtn');
+            if (loginBtn) loginBtn.style.display = 'none';
+            
+            // 显示用户信息区域（包含家庭按钮、邮箱、退出）
             const userInfoEl = document.getElementById('userInfo');
-            const loginBtnEl = document.getElementById('loginBtn');
-            
-            console.log('Auth: 元素存在检查', {
-                userEmail: !!userEmailEl,
-                userInfo: !!userInfoEl,
-                loginBtn: !!loginBtnEl
-            });
-            
-            if (userEmailEl) userEmailEl.textContent = userInfo.email;
             if (userInfoEl) userInfoEl.style.display = 'flex';
-            if (loginBtnEl) loginBtnEl.style.display = 'none';
+            
+            // 显示家庭按钮
+            const familyBtn = document.getElementById('familyBtn');
+            if (familyBtn) familyBtn.style.display = 'block';
         }
-        
-        // 显示家庭按钮
-        const familyBtn = document.getElementById('familyBtn');
-        if (familyBtn) {
-            familyBtn.style.display = 'block';
-        }
-        
-        console.log('Auth: 显示已认证 UI - 完成');
         
         // 检查是否需要配置云同步
         this.checkCloudSyncConfig();
@@ -146,17 +141,20 @@ class AuthManager {
         console.log('Auth: 显示未认证 UI');
         
         // 显示登录按钮
-        document.getElementById('loginBtn').style.display = 'block';
-        document.getElementById('userInfo').style.display = 'none';
+        const loginBtn = document.getElementById('loginBtn');
+        if (loginBtn) loginBtn.style.display = 'block';
+        
+        // 隐藏用户信息区域
+        const userInfoEl = document.getElementById('userInfo');
+        if (userInfoEl) userInfoEl.style.display = 'none';
         
         // 隐藏家庭按钮
         const familyBtn = document.getElementById('familyBtn');
-        if (familyBtn) {
-            familyBtn.style.display = 'none';
-        }
+        if (familyBtn) familyBtn.style.display = 'none';
         
         // 隐藏云同步配置提示
-        document.getElementById('cloudSyncInfo').style.display = 'none';
+        const cloudSyncInfo = document.getElementById('cloudSyncInfo');
+        if (cloudSyncInfo) cloudSyncInfo.style.display = 'none';
     }
 
     // 检查云同步配置

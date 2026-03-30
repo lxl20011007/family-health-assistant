@@ -14,47 +14,26 @@
             <div class="header-top">
                 <h1><i class="fas fa-heartbeat"></i> 健康助手</h1>
                 <div class="header-actions">
-                    <!-- 用户信息显示（登录后显示） -->
-                    <div id="userInfo" class="user-info" style="display: none;">
-                        <span id="userEmail" class="user-email"></span>
-                        <button id="logoutBtn" class="btn btn-icon btn-sm" title="退出登录">
-                            <i class="fas fa-sign-out-alt"></i>
-                        </button>
-                    </div>
-                    
-                    <!-- 登录按钮（未登录时显示） -->
+                    <!-- 未登录时显示 -->
                     <button id="loginBtn" class="btn btn-primary btn-sm" title="登录/注册">
                         <i class="fas fa-sign-in-alt"></i> 登录
                     </button>
                     
-                    <!-- 家庭组按钮（登录后显示） -->
-                    <button id="familyBtn" class="btn btn-icon" title="家庭设置" style="display: none;" onclick="showFamilyModal()">
-                        <i class="fas fa-users"></i>
-                    </button>
-                    
-                    <button id="cloudSyncBtn" class="btn btn-icon" title="云同步设置">
-                        <i class="fas fa-cloud"></i>
-                    </button>
-                    <button id="clearAllDataBtn" class="btn btn-icon" title="清空所有数据">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="member-selector">
-                <div class="member-dropdown">
-                    <button id="memberDropdownBtn" class="btn btn-secondary dropdown-toggle">
-                        <i class="fas fa-users"></i> 
-                        <span id="selectedMemberName">选择成员</span>
-                    </button>
-                    <div id="memberDropdownMenu" class="dropdown-menu" style="display: none;">
-                        <div id="memberMenuList"></div>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" id="addMemberMenuBtn" class="dropdown-item">
-                            <i class="fas fa-plus"></i> 添加新成员
-                        </a>
-                        <a href="#" id="manageMembersMenuBtn" class="dropdown-item">
-                            <i class="fas fa-cog"></i> 管理成员
-                        </a>
+                    <!-- 登录后显示 -->
+                    <div id="userInfo" class="user-info" style="display: none;">
+                        <!-- 家庭按钮 -->
+                        <button id="familyBtn" class="btn btn-icon" title="家庭成员管理" onclick="showFamilyModal()">
+                            <i class="fas fa-users"></i>
+                        </button>
+                        <!-- 云同步按钮 -->
+                        <button id="cloudSyncBtn" class="btn btn-icon" title="云同步设置">
+                            <i class="fas fa-cloud"></i>
+                        </button>
+                        <!-- 用户邮箱 + 退出 -->
+                        <span id="userEmail" class="user-email"></span>
+                        <button id="logoutBtn" class="btn btn-icon btn-sm" title="退出登录">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
                     </div>
                 </div>
             </div>
