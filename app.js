@@ -554,10 +554,6 @@ class FamilyHealthApp {
                 
                 console.log('✅ 云同步开关事件绑定完成');
             }
-                });
-                
-                console.log('✅ 云同步开关事件绑定完成');
-            }
 
             // 健康记录筛选
             const healthFilter = document.getElementById('healthFilter');
