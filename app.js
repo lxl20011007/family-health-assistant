@@ -1492,56 +1492,73 @@ class FamilyHealthApp {
         const card = document.createElement('div');
         card.className = 'card health-item';
         
-        let valueDisplay = '';
-        let typeClass = '';
+        let valueDisplay = '无数据';
+        let typeClass = 'default';
         let icon = '❤️';
         let statusBadge = '';
         
-        switch (record.type) {
+        // 兼容不同格式的type字段
+        const recordType = record.type || record.record_type || 'unknown';
+        
+        switch (recordType) {
             case 'blood_pressure':
-                valueDisplay = `${record.systolic}/${record.diastolic} mmHg`;
+            case 'blood-pressure':
+                valueDisplay = `${record.systolic || record.value || '-'}/${record.diastolic || '-'} mmHg`;
                 typeClass = 'blood-pressure';
                 icon = '🩸';
                 break;
             case 'blood_sugar':
-                valueDisplay = `${record.value} mmol/L`;
+            case 'blood-sugar':
+                valueDisplay = `${record.value || '-'} mmol/L`;
                 typeClass = 'blood-sugar';
                 icon = '🍬';
                 break;
             case 'heart_rate':
-                valueDisplay = `${record.value} 次/分`;
+            case 'heart-rate':
+                valueDisplay = `${record.value || '-'} 次/分`;
                 typeClass = 'heart-rate';
                 icon = '💓';
                 break;
             case 'height':
-                valueDisplay = `${record.value} cm`;
+                valueDisplay = `${record.value || '-'} cm`;
                 typeClass = 'height';
                 icon = '📏';
                 break;
             case 'weight':
-                valueDisplay = `${record.value} kg`;
+                valueDisplay = `${record.value || '-'} kg`;
                 typeClass = 'weight';
                 icon = '⚖️';
                 break;
             case 'bmi':
-                valueDisplay = `${record.value} kg/m²`;
+                valueDisplay = `${record.value || '-'} kg/m²`;
                 typeClass = 'bmi';
                 icon = '📊';
                 
                 // 添加 BMI 状态标签
-                const bmiStatus = this.getBMIStatus(record.value);
-                statusBadge = `<span class="bmi-status-badge ${bmiStatus.class}">${bmiStatus.text}</span>`;
+                if (record.value) {
+                    const bmiStatus = this.getBMIStatus(record.value);
+                    statusBadge = `<span class="bmi-status-badge ${bmiStatus.class}">${bmiStatus.text}</span>`;
+                }
                 break;
+            default:
+                valueDisplay = `${record.value || record.systolic || '-'}`;
+                icon = '📋';
         }
 
         const typeText = {
             blood_pressure: '血压',
+            'blood-pressure': '血压',
             blood_sugar: '血糖',
+            'blood-sugar': '血糖',
             heart_rate: '心率',
+            'heart-rate': '心率',
             height: '身高',
             weight: '体重',
-            bmi: 'BMI'
-        }[record.type];
+            bmi: 'BMI',
+            bloodPressure: '血压',
+            bloodSugar: '血糖',
+            heartRate: '心率'
+        }[recordType] || '健康';
 
         card.innerHTML = `
             <div class="card-header">
