@@ -3755,11 +3755,13 @@ class FamilyHealthApp {
     
     // 切换云同步开关
     toggleCloudSync() {
-        console.log('toggleCloudSync 被调用，this:', this);
+        console.log('=== toggleCloudSync 开始 ===');
+        console.log('this:', this);
+        console.log('window.supabaseClient:', window.supabaseClient);
         
         const supabaseClient = window.supabaseClient;
         if (!supabaseClient) {
-            console.error('Supabase 客户端未找到');
+            console.error('❌ Supabase 客户端未找到');
             return;
         }
         
@@ -3767,40 +3769,64 @@ class FamilyHealthApp {
         const isAuthenticated = supabaseClient.isAuthenticated || 
                                (supabaseClient.currentUser && supabaseClient.currentUser.id);
         
+        console.log('认证状态:', isAuthenticated, 'currentUser:', supabaseClient.currentUser);
+        
         if (!isAuthenticated) {
-            console.error('用户未认证');
+            console.error('❌ 用户未认证');
             return;
         }
         
-        console.log('切换前状态:', supabaseClient.isOnline);
+        console.log('切换前 isOnline:', supabaseClient.isOnline);
         
         // 切换状态
         supabaseClient.isOnline = !supabaseClient.isOnline;
         
-        console.log('切换后状态:', supabaseClient.isOnline);
+        console.log('切换后 isOnline:', supabaseClient.isOnline);
+        console.log('调用 updateButtonStyle...');
         
         // 直接更新按钮，不依赖 this 上下文
         this.updateButtonStyle();
+        
+        console.log('=== toggleCloudSync 结束 ===');
     }
     
     // 直接更新按钮样式
     updateButtonStyle() {
+        console.log('=== updateButtonStyle 开始 ===');
+        
         const toggleBtn = document.getElementById('cloudSyncToggle');
         const supabaseClient = window.supabaseClient;
         
-        if (!toggleBtn || !supabaseClient) return;
+        console.log('按钮元素:', toggleBtn);
+        console.log('Supabase 客户端:', supabaseClient);
+        console.log('当前 isOnline:', supabaseClient?.isOnline);
         
+        if (!toggleBtn) {
+            console.error('❌ 按钮元素未找到');
+            return;
+        }
+        
+        if (!supabaseClient) {
+            console.error('❌ Supabase 客户端未找到');
+            return;
+        }
+        
+        // 移除所有样式
         toggleBtn.classList.remove('cloud-sync-on', 'cloud-sync-off');
+        console.log('移除样式后的 class:', toggleBtn.className);
         
         if (supabaseClient.isOnline) {
             toggleBtn.classList.add('cloud-sync-on');
             toggleBtn.title = '云同步已开启（点击关闭）';
-            console.log('按钮设置为绿色（开启）');
+            console.log('✅ 按钮设置为绿色（开启）');
         } else {
             toggleBtn.classList.add('cloud-sync-off');
             toggleBtn.title = '云同步已关闭（点击开启）';
-            console.log('按钮设置为红色（关闭）');
+            console.log('🔴 按钮设置为红色（关闭）');
         }
+        
+        console.log('最终 class:', toggleBtn.className);
+        console.log('=== updateButtonStyle 结束 ===');
     }
     
     // 更新云同步开关显示
