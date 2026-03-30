@@ -1512,6 +1512,9 @@ class FamilyHealthApp {
         const card = document.createElement('div');
         card.className = 'card health-item';
         
+        // 调试日志
+        console.log('创建健康记录卡片，record:', record);
+        
         let valueDisplay = '无数据';
         let typeClass = 'default';
         let icon = '❤️';
@@ -1519,38 +1522,39 @@ class FamilyHealthApp {
         
         // 兼容不同格式的type字段
         const recordType = record.type || record.record_type || 'unknown';
+        console.log('recordType:', recordType);
         
         switch (recordType) {
             case 'blood_pressure':
             case 'blood-pressure':
-                valueDisplay = `${record.systolic || record.value || '-'}/${record.diastolic || '-'} mmHg`;
+                valueDisplay = `${record.systolic || record.systolic_value || '-'}/${record.diastolic || record.diastolic_value || '-'} mmHg`;
                 typeClass = 'blood-pressure';
                 icon = '🩸';
                 break;
             case 'blood_sugar':
             case 'blood-sugar':
-                valueDisplay = `${record.value || '-'} mmol/L`;
+                valueDisplay = `${record.value || record.blood_sugar || '-'} mmol/L`;
                 typeClass = 'blood-sugar';
                 icon = '🍬';
                 break;
             case 'heart_rate':
             case 'heart-rate':
-                valueDisplay = `${record.value || '-'} 次/分`;
+                valueDisplay = `${record.value || record.heart_rate || '-'} 次/分`;
                 typeClass = 'heart-rate';
                 icon = '💓';
                 break;
             case 'height':
-                valueDisplay = `${record.value || '-'} cm`;
+                valueDisplay = `${record.value || record.height || '-'} cm`;
                 typeClass = 'height';
                 icon = '📏';
                 break;
             case 'weight':
-                valueDisplay = `${record.value || '-'} kg`;
+                valueDisplay = `${record.value || record.weight || '-'} kg`;
                 typeClass = 'weight';
                 icon = '⚖️';
                 break;
             case 'bmi':
-                valueDisplay = `${record.value || '-'} kg/m²`;
+                valueDisplay = `${record.value || record.bmi || '-'} kg/m²`;
                 typeClass = 'bmi';
                 icon = '📊';
                 
@@ -1561,7 +1565,9 @@ class FamilyHealthApp {
                 }
                 break;
             default:
-                valueDisplay = `${record.value || record.systolic || '-'}`;
+                // 调试：显示所有可能的值
+                valueDisplay = `${record.value || record.systolic || record.diastolic || '无数据'}`;
+                console.log('未知类型，使用默认值，record:', JSON.stringify(record));
                 icon = '📋';
         }
 
