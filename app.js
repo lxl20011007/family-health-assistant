@@ -192,6 +192,141 @@ class FamilyHealthApp {
         }
     }
 
+    // 从云端下载所有数据到本地
+    async downloadAllDataFromCloud() {
+        if (typeof supabaseClient === 'undefined' || !supabaseClient.isConnected) {
+            console.warn('⚠️ Supabase 未连接');
+            return Promise.resolve();
+        }
+
+        try {
+            console.log('========== 开始从云端下载数据 ==========');
+
+            // 下载家庭成员
+            const membersResult = await supabaseClient.pullFromCloud('family_members');
+            if (membersResult.data && membersResult.data.length > 0) {
+                const cloudMembers = membersResult.data.map(m => ({
+                    id: m.id,
+                    name: m.name,
+                    gender: m.gender,
+                    birthDate: m.birth_date,
+                    notes: m.notes,
+                    createdAt: m.created_at,
+                    synced: true
+                }));
+                // 合并本地和云端数据（云端优先）
+                const localMembers = this.getMembers();
+                const merged = [...cloudMembers];
+                for (const local of localMembers) {
+                    if (!merged.find(m => m.id === local.id)) {
+                        merged.push(local);
+                    }
+                }
+                this.saveMembers(merged);
+                console.log(`📥 下载了 ${cloudMembers.length} 个家庭成员`);
+            }
+
+            // 下载健康记录
+            const healthResult = await supabaseClient.pullFromCloud('health_records');
+            if (healthResult.data && healthResult.data.length > 0) {
+                const cloudRecords = healthResult.data.map(r => ({
+                    id: r.id,
+                    memberId: r.member_id,
+                    type: r.record_type,
+                    value: r.value,
+                    unit: r.unit,
+                    date: r.recorded_at,
+                    notes: r.notes,
+                    createdAt: r.created_at,
+                    synced: true
+                }));
+                const localRecords = this.getHealthRecords();
+                const merged = [...cloudRecords];
+                for (const local of localRecords) {
+                    if (!merged.find(r => r.id === local.id)) {
+                        merged.push(local);
+                    }
+                }
+                this.saveHealthRecords(merged);
+                console.log(`📥 下载了 ${cloudRecords.length} 条健康记录`);
+            }
+
+            // 下载饮食记录
+            const dietResult = await supabaseClient.pullFromCloud('diet_records');
+            if (dietResult.data && dietResult.data.length > 0) {
+                const cloudRecords = dietResult.data.map(r => ({
+                    id: r.id,
+                    memberId: r.member_id,
+                    mealType: r.meal_type,
+                    date: r.date,
+                    foodName: r.food_name,
+                    quantity: r.quantity,
+                    unit: r.unit,
+                    nutrition: {
+                        calories: r.calories,
+                        protein: r.protein,
+                        fat: r.fat,
+                        carbs: r.carbs,
+                        fiber: r.fiber
+                    },
+                    createdAt: r.created_at,
+                    synced: true
+                }));
+                const localRecords = this.getDietRecords();
+                const merged = [...cloudRecords];
+                for (const local of localRecords) {
+                    if (!merged.find(r => r.id === local.id)) {
+                        merged.push(local);
+                    }
+                }
+                this.saveDietRecords(merged);
+                console.log(`📥 下载了 ${cloudRecords.length} 条饮食记录`);
+            }
+
+            // 下载运动记录
+            const exerciseResult = await supabaseClient.pullFromCloud('exercise_records');
+            if (exerciseResult.data && exerciseResult.data.length > 0) {
+                const cloudRecords = exerciseResult.data.map(r => ({
+                    id: r.id,
+                    memberId: r.member_id,
+                    type: r.exercise_type,
+                    duration: r.duration_minutes,
+                    caloriesBurned: r.calories_burned,
+                    exerciseDate: r.recorded_at,
+                    notes: r.notes,
+                    createdAt: r.created_at,
+                    synced: true
+                }));
+                const localRecords = this.getExercises();
+                const merged = [...cloudRecords];
+                for (const local of localRecords) {
+                    if (!merged.find(r => r.id === local.id)) {
+                        merged.push(local);
+                    }
+                }
+                this.saveExercises(merged);
+                console.log(`📥 下载了 ${cloudRecords.length} 条运动记录`);
+            }
+
+            // 更新同步时间
+            localStorage.setItem('lastSyncTime', new Date().toISOString());
+
+            // 刷新页面显示
+            this.loadMembers();
+            this.loadHealthRecords();
+            this.loadDietRecords();
+            this.loadExercises();
+            this.updateStats();
+
+            console.log('========== 云端数据下载完成 ==========');
+            return Promise.resolve();
+
+        } catch (error) {
+            console.error('❌ 从云端下载数据失败:', error);
+            return Promise.reject(error);
+        }
+    }
+
     // 同步饮食记录到云端
     async syncDietRecordToCloud(record) {
         if (typeof supabaseClient === 'undefined' || !supabaseClient.isConnected) {
@@ -368,18 +503,34 @@ class FamilyHealthApp {
                         newToggle.style.borderColor = '#4CAF50';
                         newToggle.title = '云同步已开启（点击关闭）';
                         
-                        // 显示提示
-                        alert('云同步已开启！点击"确定"开始同步数据到云端');
+                        // 弹出选择：上传还是下载
+                        const choice = confirm(
+                            '请选择同步方向：\n\n' +
+                            '点击【确定】= 上传本地数据到云端\n' +
+                            '点击【取消】= 从云端下载数据到本地'
+                        );
                         
-                        // 手动同步数据
-                        console.log('🔄 开始手动同步数据...');
-                        this.uploadAllLocalDataToCloud().then(() => {
-                            console.log('✅ 手动同步完成');
-                            alert('数据同步完成！');
-                        }).catch(err => {
-                            console.error('❌ 同步失败:', err);
-                            alert('同步失败：' + err.message);
-                        });
+                        if (choice) {
+                            // 上传
+                            console.log('🔄 开始上传数据到云端...');
+                            this.uploadAllLocalDataToCloud().then(() => {
+                                console.log('✅ 上传完成');
+                                alert('数据已上传到云端！');
+                            }).catch(err => {
+                                console.error('❌ 上传失败:', err);
+                                alert('上传失败：' + err.message);
+                            });
+                        } else {
+                            // 下载
+                            console.log('🔄 开始从云端下载数据...');
+                            this.downloadAllDataFromCloud().then(() => {
+                                console.log('✅ 下载完成');
+                                alert('云端数据已同步到本地！');
+                            }).catch(err => {
+                                console.error('❌ 下载失败:', err);
+                                alert('下载失败：' + err.message);
+                            });
+                        }
                         
                     } else {
                         newToggle.classList.add('cloud-sync-off');
@@ -389,6 +540,10 @@ class FamilyHealthApp {
                         newToggle.title = '云同步已关闭（点击开启）';
                         console.log('🔴 云同步已关闭');
                     }
+                });
+                
+                console.log('✅ 云同步开关事件绑定完成');
+            }
                 });
                 
                 console.log('✅ 云同步开关事件绑定完成');
