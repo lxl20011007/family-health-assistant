@@ -1560,10 +1560,15 @@ class FamilyHealthApp {
             heartRate: '心率'
         }[recordType] || '健康';
 
+        // 获取成员名称
+        const members = this.getMembers();
+        const member = members.find(m => m.id === record.memberId);
+        const memberName = member ? member.name : '未知成员';
+
         card.innerHTML = `
             <div class="card-header">
                 <div class="card-title">
-                    <span style="font-size: 1.2rem;">${icon}</span> ${typeText}记录
+                    <span style="font-size: 1.2rem;">${icon}</span> ${memberName} - ${typeText}
                 </div>
                 <div class="card-actions">
                     <button class="btn btn-primary btn-sm edit-health" data-id="${record.id}">
@@ -1575,13 +1580,12 @@ class FamilyHealthApp {
                 </div>
             </div>
             <div class="card-body">
-                <div class="value">${valueDisplay}</div>
-                <span class="type ${typeClass}">${typeText}</span>
+                <div class="value" style="font-size: 1.5rem; font-weight: bold; color: #667eea;">${valueDisplay}</div>
                 ${statusBadge}
-                ${record.notes ? `<p class="mt-2">备注：${record.notes}</p>` : ''}
+                ${record.notes ? `<p class="mt-2" style="color: #666; font-size: 0.9rem;">备注：${record.notes}</p>` : ''}
             </div>
             <div class="card-footer">
-                <span>记录时间：${new Date(record.recordedAt).toLocaleString()}</span>
+                <span>记录时间：${record.recordedAt ? new Date(record.recordedAt).toLocaleString() : '未知'}</span>
             </div>
         `;
 
