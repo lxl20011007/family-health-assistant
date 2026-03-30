@@ -332,7 +332,11 @@ class FamilyHealthApp {
             // 云同步开关按钮
             const cloudSyncToggle = document.getElementById('cloudSyncToggle');
             if (cloudSyncToggle) {
-                cloudSyncToggle.addEventListener('click', () => this.toggleCloudSync());
+                cloudSyncToggle.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.toggleCloudSync();
+                });
             }
 
             // 健康记录筛选
@@ -3748,8 +3752,11 @@ class FamilyHealthApp {
     
     // 切换云同步开关
     toggleCloudSync() {
+        console.log('toggleCloudSync 被调用');
+        
         const supabaseClient = window.supabaseClient;
         if (!supabaseClient) {
+            console.error('Supabase 客户端未找到');
             alert('Supabase 未初始化，请先配置云同步');
             return;
         }
@@ -3759,12 +3766,17 @@ class FamilyHealthApp {
                                (supabaseClient.currentUser && supabaseClient.currentUser.id);
         
         if (!isAuthenticated) {
+            console.error('用户未认证');
             alert('请先登录才能使用云同步');
             return;
         }
         
+        console.log('切换前状态:', supabaseClient.isOnline);
+        
         // 切换状态
         supabaseClient.isOnline = !supabaseClient.isOnline;
+        
+        console.log('切换后状态:', supabaseClient.isOnline);
         this.updateCloudSyncToggle();
         
         const status = supabaseClient.isOnline ? '开启' : '关闭';
