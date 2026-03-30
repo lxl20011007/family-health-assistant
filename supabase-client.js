@@ -12,7 +12,7 @@ class SupabaseClient {
         this.currentUser = null;
         this.config = this.loadConfig();
         this.syncQueue = [];
-        this.isOnline = false; // 暂时禁用云同步
+        this.isOnline = false; // 默认关闭云同步，避免数据暴增
         this.authListeners = [];
         this.initialize();
         this.setupEventListeners();
