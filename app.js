@@ -3452,7 +3452,11 @@ class FamilyHealthApp {
     async syncFamilyMembers() {
         const members = this.getMembers();
         
+        // 上传本地新增的成员（只上传本地有但云端没有的）
         for (const member of members) {
+            // 检查是否是有效的 UUID
+            if (!this.isValidUUID(member.id)) continue;
+            
             const cloudRecord = {
                 id: member.id,
                 name: member.name,
@@ -3471,19 +3475,64 @@ class FamilyHealthApp {
 
         // 从云端拉取最新数据
         const cloudData = await supabaseClient.pullFromCloud('family_members');
-        if (cloudData.data) {
-            const localMembers = cloudData.data.map(m => ({
-                id: m.id,
-                name: m.name,
-                gender: m.gender,
-                birthDate: m.birth_date,
-                notes: m.notes,
-                createdAt: m.created_at
-            }));
-            
-            // 合并本地和云端数据
-            this.mergeFamilyMembers(localMembers);
+        if (cloudData.data && cloudData.data.length > 0) {
+            // 只拉取，不合并（避免循环）
+            // 如果本地没有数据，才从云端下载
+            if (members.length === 0) {
+                const localMembers = cloudData.data.map(m => ({
+                    id: m.id,
+                    name: m.name,
+                    gender: m.gender,
+                    birthDate: m.birth_date,
+                    notes: m.notes,
+                    createdAt: m.created_at
+                }));
+                this.saveMembers(localMembers);
+                this.loadMembers();
+                console.log(`从云端下载了 ${localMembers.length} 个家庭成员`);
+            }
         }
+    }
+    
+    // 检查是否是有效的 UUID
+    isValidUUID(uuid) {
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        return uuidRegex.test(uuid);
+    }
+    
+    // 清理云端重复数据（保留最新的）
+    async cleanupDuplicateRecords() {
+        console.log('🔧 开始清理重复数据...');
+        
+        // 获取云端所有家庭成员
+        const cloudData = await supabaseClient.pullFromCloud('family_members');
+        if (!cloudData.data || cloudData.data.length === 0) return;
+        
+        // 按 name 分组，保留最新的
+        const nameGroups = {};
+        for (const member of cloudData.data) {
+            if (!nameGroups[member.name]) {
+                nameGroups[member.name] = [];
+            }
+            nameGroups[member.name].push(member);
+        }
+        
+        // 删除重复的（保留 updated_at 最新的）
+        let deletedCount = 0;
+        for (const name in nameGroups) {
+            const group = nameGroups[name];
+            if (group.length > 1) {
+                // 按 updated_at 排序
+                group.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+                // 删除除了第一个以外的所有记录
+                for (let i = 1; i < group.length; i++) {
+                    await supabaseClient.deleteFromCloud('family_members', group[i].id);
+                    deletedCount++;
+                }
+            }
+        }
+        
+        console.log(`✅ 清理完成，删除了 ${deletedCount} 条重复记录`);
     }
 
     // 合并家庭成员数据
