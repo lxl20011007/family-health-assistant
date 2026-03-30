@@ -207,10 +207,18 @@ class SupabaseClient {
                 cloudRecord.family_id = this.currentFamily.id;
             }
             cloudRecord.updated_at = new Date().toISOString();
+            
+            // 确保 ID 是有效的 UUID 格式
+            if (cloudRecord.id) {
+                // 如果 ID 不是 UUID 格式，生成新的 UUID
+                if (!this.isValidUUID(cloudRecord.id)) {
+                    cloudRecord.id = this.generateUUID();
+                }
+            }
 
             const { data, error } = await this.supabase
                 .from(table)
-                .upsert(cloudRecord, { onConflict: 'id' });
+                .upsert(cloudRecord);
 
             if (error) throw error;
             return { success: true, cloudId: data[0]?.id };
@@ -219,6 +227,20 @@ class SupabaseClient {
             this.syncQueue.push({ action: 'push', table, record, localId });
             return { error: error.message };
         }
+    }
+    
+    // 生成 UUID
+    generateUUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+    
+    // 检查是否是有效的 UUID
+    isValidUUID(uuid) {
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        return uuidRegex.test(uuid);
     }
 
     /**
