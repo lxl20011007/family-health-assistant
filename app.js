@@ -1963,12 +1963,17 @@ class FamilyHealthApp {
 
         submitBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            this.saveHealthRecord();
-            closeModal();
+            // 保存成功后关闭弹窗
+            if (this.saveHealthRecord()) {
+                closeModal();
+            }
         });
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
+            if (this.saveHealthRecord()) {
+                closeModal();
+            }
         });
     }
 
@@ -2060,10 +2065,15 @@ class FamilyHealthApp {
         const memberId = document.getElementById('healthMember').value;
         if (!memberId) {
             alert('请选择家庭成员！');
-            return;
+            return false;
         }
         
         const type = document.getElementById('healthType').value;
+        if (!type) {
+            alert('请选择记录类型！');
+            return false;
+        }
+        
         const notes = document.getElementById('healthNotes').value.trim();
         const recordedAt = document.getElementById('recordedAt').value;
 
@@ -2075,40 +2085,40 @@ class FamilyHealthApp {
             
             if (!systolic || !diastolic || systolic < 50 || systolic > 250 || diastolic < 30 || diastolic > 150) {
                 alert('请输入有效的血压值！');
-                return;
+                return false;
             }
         } else if (type) {
             value = parseFloat(document.getElementById('healthValue').value);
             
             if (!value || value <= 0) {
                 alert('请输入有效的数值！');
-                return;
+                return false;
             }
             
             // 验证各类型的数值范围
             if (type === 'blood_sugar' && (value < 1 || value > 30)) {
                 alert('血糖值应在1-30 mmol/L之间！');
-                return;
+                return false;
             }
             
             if (type === 'heart_rate' && (value < 30 || value > 200)) {
                 alert('心率值应在30-200次/分之间！');
-                return;
+                return false;
             }
             
             if (type === 'height' && (value < 50 || value > 250)) {
                 alert('身高应在50-250cm之间！');
-                return;
+                return false;
             }
             
             if (type === 'weight' && (value < 10 || value > 300)) {
                 alert('体重应在10-300kg之间！');
-                return;
+                return false;
             }
             
             if (type === 'bmi' && (value < 10 || value > 60)) {
                 alert('BMI应在10-60之间！');
-                return;
+                return false;
             }
         }
 
@@ -2131,8 +2141,10 @@ class FamilyHealthApp {
         this.updateStats();
         alert('✅ 健康记录已添加！');
         
-        // 🔥 关键：立即同步到云端
+        // 同步到云端
         this.syncHealthRecordToCloud(newRecord);
+        
+        return true;
     }
 
     // 同步单条健康记录到云端
