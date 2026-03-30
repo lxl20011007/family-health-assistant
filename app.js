@@ -916,12 +916,18 @@ class FamilyHealthApp {
         const listDiv = document.getElementById('dietList');
         if (!listDiv) return;
         
+        // 获取成员名称映射
+        const members = this.getMembers();
+        const memberMap = {};
+        members.forEach(m => memberMap[m.id] = m.name);
+        
         // 按餐次分组
         const mealGroups = {};
         records.forEach(record => {
-            const key = `${record.date}_${record.mealType}_${record.time}`;
+            const key = `${record.date}_${record.mealType}_${record.time}_${record.memberId}`;
             if (!mealGroups[key]) {
                 mealGroups[key] = {
+                    memberId: record.memberId,
                     mealType: record.mealType,
                     time: record.time,
                     date: record.date,
@@ -958,6 +964,7 @@ class FamilyHealthApp {
             const mealName = mealNames[group.mealType] || '加餐';
             const mealIcon = mealIcons[group.mealType] || 'fa-utensils';
             const time = group.time || '未记录时间';
+            const memberName = memberMap[group.memberId] || '未知成员';
             
             // 计算本餐总营养
             let totalCal = 0, totalCarbs = 0, totalProtein = 0, totalFat = 0, totalFiber = 0;
@@ -983,6 +990,7 @@ class FamilyHealthApp {
                 <div class="diet-record meal-group" data-ids='${allIds}'>
                     <div class="diet-record-header">
                         <div class="diet-meal-info">
+                            <span class="member-name" style="color: #667eea; font-weight: 600;">${memberName}</span>
                             <span class="meal-badge ${group.mealType}">
                                 <i class="fas ${mealIcon}"></i> ${mealName}
                             </span>
@@ -2888,6 +2896,11 @@ class FamilyHealthApp {
     createExerciseCard(exercise) {
         const card = document.createElement('div');
         card.className = 'card exercise-item';
+        
+        // 获取成员名称
+        const members = this.getMembers();
+        const member = members.find(m => m.id === exercise.memberId);
+        const memberName = member ? member.name : '未知成员';
 
         const duration = exercise.duration >= 60
             ? `${Math.floor(exercise.duration / 60)}小时${exercise.duration % 60}分钟`
@@ -2899,7 +2912,7 @@ class FamilyHealthApp {
         card.innerHTML = `
             <div class="card-header">
                 <div class="card-title">
-                    <i class="fas ${icon}"></i> ${exercise.type}
+                    <i class="fas ${icon}"></i> ${memberName} - ${exercise.type}
                 </div>
                 <div class="card-actions">
                     <button class="btn btn-danger btn-sm delete-exercise" data-id="${exercise.id}">
