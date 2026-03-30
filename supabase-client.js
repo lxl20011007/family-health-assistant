@@ -220,8 +220,18 @@ class SupabaseClient {
                 .from(table)
                 .upsert(cloudRecord);
 
-            if (error) throw error;
-            return { success: true, cloudId: data[0]?.id };
+            if (error) {
+                console.error(`Supabase: ${table} upsert 错误`, error);
+                throw error;
+            }
+            
+            // 检查 data 是否有效
+            if (!data || !Array.isArray(data) || data.length === 0) {
+                console.warn(`Supabase: ${table} upsert 返回空数据`);
+                return { success: true, cloudId: cloudRecord.id };
+            }
+
+            return { success: true, cloudId: data[0]?.id || cloudRecord.id };
         } catch (error) {
             console.error(`Supabase: 上传${table}失败`, error);
             this.syncQueue.push({ action: 'push', table, record, localId });
