@@ -156,7 +156,8 @@ class FamilyHealthApp {
         try {
             console.log('🔄 开始检查需要同步的数据...');
 
-            // 上传家庭成员 - 只同步新增或未同步的
+            // ========== 1. 同步家庭成员 ==========
+            console.log('--- 同步家庭成员 ---');
             const members = this.getMembers();
             let membersSynced = 0;
             for (const member of members) {
@@ -175,15 +176,80 @@ class FamilyHealthApp {
                     console.log(`  → 跳过（已同步）`);
                 }
             }
-            // 保存同步状态
             if (membersSynced > 0) {
                 this.saveMembers(members);
             }
             console.log(`📤 本次同步了 ${membersSynced} 个家庭成员`);
 
+            // ========== 2. 同步健康记录 ==========
+            console.log('--- 同步健康记录 ---');
+            const healthRecords = this.getHealthRecords();
+            let healthSynced = 0;
+            for (const record of healthRecords) {
+                const createdAt = record.createdAt ? new Date(record.createdAt) : new Date();
+                const isNew = !lastSync || createdAt.getTime() > lastSync.getTime();
+                const notSynced = !record.synced;
+                
+                console.log(`健康记录 ${record.type}: createdAt=${createdAt.toLocaleString()}, isNew=${isNew}, notSynced=${notSynced}`);
+                
+                if (isNew || notSynced) {
+                    await this.syncHealthRecordToCloud(record);
+                    record.synced = true;
+                    healthSynced++;
+                    console.log(`  → 需要同步`);
+                } else {
+                    console.log(`  → 跳过（已同步）`);
+                }
+            }
+            if (healthSynced > 0) {
+                this.saveHealthRecords(healthRecords);
+            }
+            console.log(`📤 本次同步了 ${healthSynced} 条健康记录`);
+
+            // ========== 3. 同步饮食记录 ==========
+            console.log('--- 同步饮食记录 ---');
+            const dietRecords = this.getDietRecords();
+            let dietSynced = 0;
+            for (const record of dietRecords) {
+                const createdAt = record.createdAt ? new Date(record.createdAt) : new Date();
+                const isNew = !lastSync || createdAt.getTime() > lastSync.getTime();
+                const notSynced = !record.synced;
+                
+                if (isNew || notSynced) {
+                    await this.syncDietRecordToCloud(record);
+                    record.synced = true;
+                    dietSynced++;
+                }
+            }
+            if (dietSynced > 0) {
+                this.saveDietRecords(dietRecords);
+            }
+            console.log(`📤 本次同步了 ${dietSynced} 条饮食记录`);
+
+            // ========== 4. 同步运动记录 ==========
+            console.log('--- 同步运动记录 ---');
+            const exerciseRecords = this.getExercises();
+            let exerciseSynced = 0;
+            for (const record of exerciseRecords) {
+                const createdAt = record.createdAt ? new Date(record.createdAt) : new Date();
+                const isNew = !lastSync || createdAt.getTime() > lastSync.getTime();
+                const notSynced = !record.synced;
+                
+                if (isNew || notSynced) {
+                    await this.syncExerciseToCloud(record);
+                    record.synced = true;
+                    exerciseSynced++;
+                }
+            }
+            if (exerciseSynced > 0) {
+                this.saveExercises(exerciseRecords);
+            }
+            console.log(`📤 本次同步了 ${exerciseSynced} 条运动记录`);
+
             // 更新同步时间
             localStorage.setItem('lastSyncTime', new Date().toISOString());
             console.log('========== 同步完成 ==========');
+            console.log(`总计: ${membersSynced}个成员, ${healthSynced}条健康, ${dietSynced}条饮食, ${exerciseSynced}条运动`);
             
             return Promise.resolve();
         } catch (error) {
