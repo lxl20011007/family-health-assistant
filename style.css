@@ -1225,6 +1225,33 @@ body {
     border-color: #999 !important;
 }
 
+/* 首页统计卡片可点击样式 */
+.stat-card.clickable {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.stat-card.clickable:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.stat-card.clickable:hover i,
+.stat-card.clickable:hover h3,
+.stat-card.clickable:hover p,
+.stat-card.clickable:hover small {
+    color: white;
+}
+
+.stat-card.clickable small {
+    display: block;
+    margin-top: 5px;
+    color: #666;
+    font-size: 0.8rem;
+}
+
 /* ==================== AI 问诊样式 ==================== */
 .api-config-section {
     background: white;

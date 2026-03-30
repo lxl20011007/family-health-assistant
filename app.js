@@ -1549,6 +1549,9 @@ class FamilyHealthApp {
                     <span style="font-size: 1.2rem;">${icon}</span> ${typeText}记录
                 </div>
                 <div class="card-actions">
+                    <button class="btn btn-primary btn-sm edit-health" data-id="${record.id}">
+                        <i class="fas fa-edit"></i> 编辑
+                    </button>
                     <button class="btn btn-danger btn-sm delete-health" data-id="${record.id}">
                         <i class="fas fa-trash"></i> 删除
                     </button>
@@ -1568,6 +1571,11 @@ class FamilyHealthApp {
         card.querySelector('.delete-health').addEventListener('click', (e) => {
             e.stopPropagation();
             this.deleteHealthRecord(record.id);
+        });
+        
+        card.querySelector('.edit-health').addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.editHealthRecord(record);
         });
 
         return card;
@@ -2139,6 +2147,181 @@ class FamilyHealthApp {
 
         // 🔥 关键：同步删除到云端
         this.deleteHealthRecordFromCloud(recordId);
+    }
+
+    // 编辑健康记录
+    editHealthRecord(record) {
+        // 复用添加模态框，填充现有数据
+        this.showEditHealthModal(record);
+    }
+
+    // 显示编辑健康记录模态框
+    showEditHealthModal(record) {
+        const members = this.getMembers();
+        if (members.length === 0) {
+            alert('请先添加家庭成员！');
+            return;
+        }
+
+        const memberOptions = members.map(m => 
+            `<option value="${m.id}" ${m.id === record.memberId ? 'selected' : ''}>${m.name}</option>`
+        ).join('');
+
+        let fieldsHTML = '';
+        if (record.type === 'blood_pressure') {
+            fieldsHTML = `
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editSystolic">收缩压 (mmHg) *</label>
+                        <input type="number" id="editSystolic" class="form-control" value="${record.systolic || ''}" min="50" max="250" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editDiastolic">舒张压 (mmHg) *</label>
+                        <input type="number" id="editDiastolic" class="form-control" value="${record.diastolic || ''}" min="30" max="150" required>
+                    </div>
+                </div>
+            `;
+        } else {
+            fieldsHTML = `
+                <div class="form-group">
+                    <label for="editHealthValue">数值 *</label>
+                    <input type="number" id="editHealthValue" class="form-control" value="${record.value || ''}" step="0.1" required>
+                </div>
+            `;
+        }
+
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay active';
+        
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">编辑健康记录</h3>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="editHealthForm">
+                        <div class="form-group">
+                            <label for="editHealthMember">家庭成员 *</label>
+                            <select id="editHealthMember" class="form-control" required>
+                                ${memberOptions}
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>记录类型</label>
+                            <input type="text" class="form-control" value="${{
+                                blood_pressure: '血压',
+                                blood_sugar: '血糖',
+                                heart_rate: '心率',
+                                height: '身高',
+                                weight: '体重',
+                                bmi: 'BMI'
+                            }[record.type]}" disabled>
+                            <input type="hidden" id="editHealthType" value="${record.type}">
+                        </div>
+                        
+                        ${fieldsHTML}
+                        
+                        <div class="form-group">
+                            <label for="editRecordedAt">记录日期</label>
+                            <input type="date" id="editRecordedAt" class="form-control" value="${record.recordedAt ? record.recordedAt.split('T')[0] : ''}" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editHealthNotes">备注</label>
+                            <textarea id="editHealthNotes" class="form-control" rows="2">${record.notes || ''}</textarea>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" id="cancelEditHealth">取消</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> 保存修改
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+        document.body.appendChild(modal);
+
+        // 关闭按钮
+        modal.querySelector('.close-btn').addEventListener('click', () => {
+            overlay.remove();
+            modal.remove();
+        });
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.remove();
+                modal.remove();
+            }
+        });
+        modal.querySelector('#cancelEditHealth').addEventListener('click', () => {
+            overlay.remove();
+            modal.remove();
+        });
+
+        // 表单提交
+        modal.querySelector('#editHealthForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const memberId = document.getElementById('editHealthMember').value;
+            const type = document.getElementById('editHealthType').value;
+            const recordedAt = document.getElementById('editRecordedAt').value;
+            const notes = document.getElementById('editHealthNotes').value.trim();
+
+            let value, systolic, diastolic;
+
+            if (type === 'blood_pressure') {
+                systolic = parseInt(document.getElementById('editSystolic').value);
+                diastolic = parseInt(document.getElementById('editDiastolic').value);
+                
+                if (!systolic || !diastolic) {
+                    alert('请输入有效的血压值！');
+                    return;
+                }
+            } else {
+                value = parseFloat(document.getElementById('editHealthValue').value);
+                if (!value || value <= 0) {
+                    alert('请输入有效的数值！');
+                    return;
+                }
+            }
+
+            // 更新记录
+            const records = this.getHealthRecords();
+            const index = records.findIndex(r => r.id === record.id);
+            if (index !== -1) {
+                records[index] = {
+                    ...records[index],
+                    memberId,
+                    type,
+                    value: type !== 'blood_pressure' ? value : null,
+                    systolic: type === 'blood_pressure' ? systolic : null,
+                    diastolic: type === 'blood_pressure' ? diastolic : null,
+                    recordedAt: recordedAt || new Date().toISOString(),
+                    notes,
+                    updatedAt: new Date().toISOString(),
+                    synced: false // 标记为未同步
+                };
+                this.saveHealthRecords(records);
+            }
+
+            overlay.remove();
+            modal.remove();
+            this.loadHealthRecords();
+            this.updateStats();
+            alert('✅ 健康记录已更新！');
+            
+            // 同步到云端
+            if (records[index]) {
+                this.syncHealthRecordToCloud(records[index]);
+            }
+        });
     }
 
     // 从云端删除健康记录
@@ -4196,3 +4379,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 1000);
 });
+
+// 全局函数：切换标签页
+function switchToTab(tabName) {
+    if (window.app) {
+        window.app.switchTab(tabName);
+    }
+}
+
+// 全局函数：关闭模态框
+function closeModal() {
+    const modal = document.querySelector('.modal-overlay');
+    if (modal) {
+        modal.remove();
+    }
+    const modalContainer = document.getElementById('modalContainer');
+    if (modalContainer) {
+        modalContainer.innerHTML = '';
+    }
+}
+
+// 全局函数：显示添加成员弹窗
+function showAddMemberModal() {
+    if (window.app) {
+        window.app.showAddMemberModal();
+    }
+}
+
+// 全局函数：显示家庭设置弹窗
+function showFamilyModal() {
+    if (window.familyManager) {
+        window.familyManager.showFamilyModal();
+    }
+}
+
+// 全局函数：显示创建家庭表单
+function showCreateFamilyForm() {
+    if (window.familyManager) {
+        window.familyManager.showCreateFamilyForm();
+    }
+}

@@ -52,38 +52,32 @@
                 <div id="dashboard" class="tab-content active">
                     <h2><i class="fas fa-home"></i> 首页</h2>
                     <div class="welcome-message">
-                        <p>这是一个本地运行的家庭健康管理工具，所有数据都保存在您的设备中。</p>
+                        <p>点击下方模块快速管理数据</p>
                         <div class="quick-stats">
-                            <div class="stat-card">
+                            <div class="stat-card clickable" onclick="switchToTab('members')">
                                 <i class="fas fa-users"></i>
                                 <h3>家庭成员</h3>
                                 <p id="memberCount">0</p>
+                                <small>点击管理</small>
                             </div>
-                            <div class="stat-card">
+                            <div class="stat-card clickable" onclick="switchToTab('health')">
                                 <i class="fas fa-heart"></i>
                                 <h3>健康记录</h3>
                                 <p id="healthRecordCount">0</p>
+                                <small>点击管理</small>
                             </div>
-                            <div class="stat-card">
+                            <div class="stat-card clickable" onclick="switchToTab('diet')">
                                 <i class="fas fa-utensils"></i>
                                 <h3>饮食记录</h3>
                                 <p id="dietCount">0</p>
+                                <small>点击管理</small>
                             </div>
-                            <div class="stat-card">
+                            <div class="stat-card clickable" onclick="switchToTab('exercise')">
                                 <i class="fas fa-running"></i>
                                 <h3>运动记录</h3>
                                 <p id="exerciseCount">0</p>
+                                <small>点击管理</small>
                             </div>
-                        </div>
-                        <div class="instructions">
-                            <h3>使用说明：</h3>
-                            <ol>
-                                <li>点击"添加成员"按钮创建家庭成员</li>
-                                <li>选择家庭成员后，可以记录健康指标</li>
-                                <li>记录每日饮食，管理营养摄入</li>
-                                <li>记录每日运动，保持健康生活</li>
-                                <li>所有数据都保存在您的设备中，不会上传到任何服务器</li>
-                            </ol>
                         </div>
                     </div>
                 </div>
