@@ -143,7 +143,8 @@ class FamilyHealthApp {
     // 上传所有本地数据到云端（首次同步）
     async uploadAllLocalDataToCloud() {
         if (typeof supabaseClient === 'undefined' || !supabaseClient.isConnected) {
-            return;
+            console.warn('⚠️ Supabase 未连接');
+            return Promise.resolve();
         }
 
         try {
@@ -151,37 +152,44 @@ class FamilyHealthApp {
 
             // 上传家庭成员
             const members = this.getMembers();
+            console.log(`📤 上传 ${members.length} 个家庭成员...`);
             for (const member of members) {
                 await this.syncMemberToCloud(member, 'create');
             }
 
             // 上传健康记录
             const healthRecords = this.getHealthRecords();
+            console.log(`📤 上传 ${healthRecords.length} 条健康记录...`);
             for (const record of healthRecords) {
                 await this.syncHealthRecordToCloud(record);
             }
 
             // 上传饮食记录
             const dietRecords = this.getDietRecords();
+            console.log(`📤 上传 ${dietRecords.length} 条饮食记录...`);
             for (const record of dietRecords) {
                 await this.syncDietRecordToCloud(record);
             }
 
             // 上传运动记录
             const exercises = this.getExercises();
+            console.log(`📤 上传 ${exercises.length} 条运动记录...`);
             for (const exercise of exercises) {
                 await this.syncExerciseToCloud(exercise);
             }
 
             // 上传用药提醒
             const medications = this.getMedications();
+            console.log(`📤 上传 ${medications.length} 条用药提醒...`);
             for (const medication of medications) {
                 await this.syncMedicationToCloud(medication);
             }
 
             console.log('✅ 所有本地数据已上传到云端');
+            return Promise.resolve();
         } catch (error) {
             console.error('❌ 上传本地数据失败:', error);
+            return Promise.reject(error);
         }
     }
 
@@ -343,6 +351,7 @@ class FamilyHealthApp {
                     
                     if (!window.supabaseClient) {
                         console.error('Supabase 客户端未初始化');
+                        alert('请先配置云同步');
                         return;
                     }
                     
@@ -359,12 +368,27 @@ class FamilyHealthApp {
                         newToggle.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
                         newToggle.style.borderColor = '#4CAF50';
                         newToggle.title = '云同步已开启（点击关闭）';
+                        
+                        // 显示提示
+                        alert('云同步已开启！点击"确定"开始同步数据到云端');
+                        
+                        // 手动同步数据
+                        console.log('🔄 开始手动同步数据...');
+                        this.uploadAllLocalDataToCloud().then(() => {
+                            console.log('✅ 手动同步完成');
+                            alert('数据同步完成！');
+                        }).catch(err => {
+                            console.error('❌ 同步失败:', err);
+                            alert('同步失败：' + err.message);
+                        });
+                        
                     } else {
                         newToggle.classList.add('cloud-sync-off');
                         newToggle.style.color = '#f44336';
                         newToggle.style.backgroundColor = 'rgba(244, 67, 54, 0.1)';
                         newToggle.style.borderColor = '#f44336';
                         newToggle.title = '云同步已关闭（点击开启）';
+                        console.log('🔴 云同步已关闭');
                     }
                 });
                 
