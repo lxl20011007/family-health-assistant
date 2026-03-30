@@ -329,17 +329,47 @@ class FamilyHealthApp {
                 cloudConfigBtn.addEventListener('click', () => this.showCloudSyncModal());
             }
 
-            // 云同步开关按钮
+            // 云同步开关按钮 - 更可靠的事件绑定
             const cloudSyncToggle = document.getElementById('cloudSyncToggle');
             if (cloudSyncToggle) {
-                // 保存 this 引用
-                const self = this;
-                cloudSyncToggle.addEventListener('click', function(e) {
+                // 先移除所有现有的事件监听器
+                const newToggle = cloudSyncToggle.cloneNode(true);
+                cloudSyncToggle.parentNode.replaceChild(newToggle, cloudSyncToggle);
+                
+                // 重新绑定事件
+                newToggle.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('按钮点击，this:', this, 'self:', self);
-                    self.toggleCloudSync();
+                    console.log('🔄 云同步开关被点击');
+                    
+                    if (!window.supabaseClient) {
+                        console.error('Supabase 客户端未初始化');
+                        return;
+                    }
+                    
+                    // 切换状态
+                    window.supabaseClient.isOnline = !window.supabaseClient.isOnline;
+                    const isOnline = window.supabaseClient.isOnline;
+                    console.log('云同步状态:', isOnline ? '开启' : '关闭');
+                    
+                    // 直接更新样式
+                    newToggle.classList.remove('cloud-sync-on', 'cloud-sync-off');
+                    if (isOnline) {
+                        newToggle.classList.add('cloud-sync-on');
+                        newToggle.style.color = '#4CAF50';
+                        newToggle.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
+                        newToggle.style.borderColor = '#4CAF50';
+                        newToggle.title = '云同步已开启（点击关闭）';
+                    } else {
+                        newToggle.classList.add('cloud-sync-off');
+                        newToggle.style.color = '#f44336';
+                        newToggle.style.backgroundColor = 'rgba(244, 67, 54, 0.1)';
+                        newToggle.style.borderColor = '#f44336';
+                        newToggle.title = '云同步已关闭（点击开启）';
+                    }
                 });
+                
+                console.log('✅ 云同步开关事件绑定完成');
             }
 
             // 健康记录筛选
