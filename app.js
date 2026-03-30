@@ -332,10 +332,13 @@ class FamilyHealthApp {
             // 云同步开关按钮
             const cloudSyncToggle = document.getElementById('cloudSyncToggle');
             if (cloudSyncToggle) {
-                cloudSyncToggle.addEventListener('click', (e) => {
+                // 保存 this 引用
+                const self = this;
+                cloudSyncToggle.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    this.toggleCloudSync();
+                    console.log('按钮点击，this:', this, 'self:', self);
+                    self.toggleCloudSync();
                 });
             }
 
@@ -3752,12 +3755,11 @@ class FamilyHealthApp {
     
     // 切换云同步开关
     toggleCloudSync() {
-        console.log('toggleCloudSync 被调用');
+        console.log('toggleCloudSync 被调用，this:', this);
         
         const supabaseClient = window.supabaseClient;
         if (!supabaseClient) {
             console.error('Supabase 客户端未找到');
-            alert('Supabase 未初始化，请先配置云同步');
             return;
         }
         
@@ -3767,7 +3769,6 @@ class FamilyHealthApp {
         
         if (!isAuthenticated) {
             console.error('用户未认证');
-            alert('请先登录才能使用云同步');
             return;
         }
         
@@ -3778,47 +3779,27 @@ class FamilyHealthApp {
         
         console.log('切换后状态:', supabaseClient.isOnline);
         
-        // 确保 updateCloudSyncToggle 被调用
-        if (this.updateCloudSyncToggle) {
-            this.updateCloudSyncToggle();
-        } else if (window.app && window.app.updateCloudSyncToggle) {
-            window.app.updateCloudSyncToggle();
-        } else {
-            console.error('updateCloudSyncToggle 方法未找到');
-            // 手动更新按钮
-            this.manualUpdateCloudSyncToggle();
-        }
-        
-        const status = supabaseClient.isOnline ? '开启' : '关闭';
-        console.log(`云同步已${status}`);
-        
-        // 显示状态提示
-        const statusEl = document.createElement('div');
-        statusEl.className = 'status-toast';
-        statusEl.textContent = `云同步已${status}`;
-        statusEl.style.cssText = `
-            position: fixed; top: 20px; right: 20px;
-            background: ${supabaseClient.isOnline ? '#4CAF50' : '#f44336'};
-            color: white; padding: 10px 20px; border-radius: 5px;
-            z-index: 1000; font-size: 14px;
-        `;
-        document.body.appendChild(statusEl);
-        setTimeout(() => statusEl.remove(), 2000);
+        // 直接更新按钮，不依赖 this 上下文
+        this.updateButtonStyle();
     }
     
-    // 手动更新云同步开关显示
-    manualUpdateCloudSyncToggle() {
+    // 直接更新按钮样式
+    updateButtonStyle() {
         const toggleBtn = document.getElementById('cloudSyncToggle');
-        if (!toggleBtn || !window.supabaseClient) return;
+        const supabaseClient = window.supabaseClient;
+        
+        if (!toggleBtn || !supabaseClient) return;
         
         toggleBtn.classList.remove('cloud-sync-on', 'cloud-sync-off');
         
-        if (window.supabaseClient.isOnline) {
+        if (supabaseClient.isOnline) {
             toggleBtn.classList.add('cloud-sync-on');
             toggleBtn.title = '云同步已开启（点击关闭）';
+            console.log('按钮设置为绿色（开启）');
         } else {
             toggleBtn.classList.add('cloud-sync-off');
             toggleBtn.title = '云同步已关闭（点击开启）';
+            console.log('按钮设置为红色（关闭）');
         }
     }
     
