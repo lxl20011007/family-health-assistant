@@ -1206,6 +1206,22 @@ body {
     margin-top: 6px;
 }
 
+/* 云同步开关样式 */
+.btn-icon.cloud-sync-on {
+    color: #4CAF50;
+    background: rgba(76, 175, 80, 0.1);
+}
+
+.btn-icon.cloud-sync-off {
+    color: #f44336;
+    background: rgba(244, 67, 54, 0.1);
+}
+
+.btn-icon.cloud-sync-disabled {
+    color: #999;
+    background: rgba(153, 153, 153, 0.1);
+}
+
 /* ==================== AI 问诊样式 ==================== */
 .api-config-section {
     background: white;

@@ -323,10 +323,10 @@ class FamilyHealthApp {
                 addExerciseBtn.addEventListener('click', () => this.showAddExerciseModal());
             }
 
-            // 云同步按钮
-            const cloudSyncBtn = document.getElementById('cloudSyncBtn');
-            if (cloudSyncBtn) {
-                cloudSyncBtn.addEventListener('click', () => this.showCloudSyncModal());
+            // 云同步开关按钮
+            const cloudSyncToggle = document.getElementById('cloudSyncToggle');
+            if (cloudSyncToggle) {
+                cloudSyncToggle.addEventListener('click', () => this.toggleCloudSync());
             }
 
             // 健康记录筛选
@@ -3739,10 +3739,48 @@ class FamilyHealthApp {
         this.saveExercises(merged);
         this.loadExercises();
     }
+    
+    // 切换云同步开关
+    toggleCloudSync() {
+        if (window.supabaseClient) {
+            window.supabaseClient.isOnline = !window.supabaseClient.isOnline;
+            this.updateCloudSyncToggle();
+            
+            const status = window.supabaseClient.isOnline ? '开启' : '关闭';
+            console.log(`云同步已${status}`);
+            alert(`云同步已${status}`);
+        }
+    }
+    
+    // 更新云同步开关显示
+    updateCloudSyncToggle() {
+        const toggleBtn = document.getElementById('cloudSyncToggle');
+        if (!toggleBtn || !window.supabaseClient) return;
+        
+        toggleBtn.classList.remove('cloud-sync-on', 'cloud-sync-off', 'cloud-sync-disabled');
+        
+        if (!window.supabaseClient.supabase || !window.supabaseClient.isAuthenticated) {
+            toggleBtn.classList.add('cloud-sync-disabled');
+            toggleBtn.title = '未登录，无法使用云同步';
+        } else if (window.supabaseClient.isOnline) {
+            toggleBtn.classList.add('cloud-sync-on');
+            toggleBtn.title = '云同步已开启（点击关闭）';
+        } else {
+            toggleBtn.classList.add('cloud-sync-off');
+            toggleBtn.title = '云同步已关闭（点击开启）';
+        }
+    }
 }
 
 // 页面加载完成后初始化应用
 document.addEventListener('DOMContentLoaded', () => {
     const app = new FamilyHealthApp();
     app.addCSSAnimations();
+    
+    // 初始化云同步开关状态
+    setTimeout(() => {
+        if (app.updateCloudSyncToggle) {
+            app.updateCloudSyncToggle();
+        }
+    }, 1000);
 });
