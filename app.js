@@ -2305,7 +2305,7 @@ class FamilyHealthApp {
             const cloudRecord = {
                 id: recordId,
                 member_id: record.memberId,
-                record_type: record.type,
+                type: record.type,
                 value: record.value,
                 systolic: record.systolic,
                 diastolic: record.diastolic,
