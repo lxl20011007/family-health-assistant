@@ -189,6 +189,43 @@ body {
     gap: 8px;
 }
 
+/* ==================== 成员健康数据标签页 ==================== */
+.member-health-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 10px;
+}
+
+.member-health-tabs .tab-btn {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    background: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.member-health-tabs .tab-btn:hover {
+    background: #e9ecef;
+}
+
+.member-health-tabs .tab-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.member-health-tabs .tab-btn i {
+    font-size: 16px;
+}
+
 /* ==================== 欢迎信息 ==================== */
 .welcome-message {
     margin-bottom: 20px;

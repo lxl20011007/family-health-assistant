@@ -1249,6 +1249,7 @@ class FamilyHealthApp {
     createMemberCard(member) {
         const card = document.createElement('div');
         card.className = 'card member-card';
+        card.style.cursor = 'pointer';
         card.innerHTML = `
             <div class="member-card-header">
                 <div class="member-avatar">
@@ -1276,6 +1277,12 @@ class FamilyHealthApp {
             </div>
         `;
 
+        // 点击卡片查看该成员的健康数据
+        card.addEventListener('click', (e) => {
+            if (e.target.closest('button')) return;
+            this.viewMemberHealthData(member.id);
+        });
+
         // 绑定编辑和删除事件
         const editBtn = card.querySelector('.edit-member');
         const deleteBtn = card.querySelector('.delete-member');
@@ -1295,6 +1302,135 @@ class FamilyHealthApp {
         }
 
         return card;
+    }
+
+    // 查看成员的健康数据
+    viewMemberHealthData(memberId) {
+        const member = this.getMembers().find(m => m.id === memberId);
+        if (!member) return;
+
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay active';
+        modal.innerHTML = `
+            <div class="modal" style="max-width: 90%; max-height: 90vh; overflow-y: auto;">
+                <div class="modal-header">
+                    <h3><i class="fas fa-user"></i> ${member.name} 的健康数据</h3>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="member-health-tabs">
+                        <button class="tab-btn active" data-tab="health">
+                            <i class="fas fa-heartbeat"></i> 健康指标
+                        </button>
+                        <button class="tab-btn" data-tab="diet">
+                            <i class="fas fa-utensils"></i> 饮食管理
+                        </button>
+                        <button class="tab-btn" data-tab="exercise">
+                            <i class="fas fa-dumbbell"></i> 运动管理
+                        </button>
+                    </div>
+                    
+                    <div id="health-tab" class="tab-content active">
+                        <div id="memberHealthList"></div>
+                    </div>
+                    <div id="diet-tab" class="tab-content">
+                        <div id="memberDietList"></div>
+                    </div>
+                    <div id="exercise-tab" class="tab-content">
+                        <div id="memberExerciseList"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        const closeBtn = modal.querySelector('.close-btn');
+        closeBtn.addEventListener('click', () => modal.remove());
+
+        const tabBtns = modal.querySelectorAll('.tab-btn');
+        const tabContents = modal.querySelectorAll('.tab-content');
+        
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                modal.querySelector(`#${btn.dataset.tab}-tab`).classList.add('active');
+                this.loadMemberHealthData(memberId, btn.dataset.tab, modal);
+            });
+        });
+
+        this.loadMemberHealthData(memberId, 'health', modal);
+    }
+
+    // 加载成员的健康数据
+    loadMemberHealthData(memberId, tabType, modal) {
+        if (!modal) return;
+
+        if (tabType === 'health') {
+            const healthRecords = this.getHealthRecords().filter(r => r.memberId === memberId);
+            const container = modal.querySelector('#memberHealthList');
+            container.innerHTML = '';
+
+            if (healthRecords.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>暂无健康记录</p></div>';
+                return;
+            }
+
+            healthRecords.forEach(record => {
+                const card = this.createHealthRecordCard(record);
+                container.appendChild(card);
+            });
+        } else if (tabType === 'diet') {
+            const dietRecords = this.getDietRecords().filter(r => r.memberId === memberId);
+            const container = modal.querySelector('#memberDietList');
+            container.innerHTML = '';
+
+            if (dietRecords.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>暂无饮食记录</p></div>';
+                return;
+            }
+
+            const grouped = {};
+            dietRecords.forEach(r => {
+                const key = r.date;
+                if (!grouped[key]) grouped[key] = [];
+                grouped[key].push(r);
+            });
+
+            Object.keys(grouped).sort().reverse().forEach(date => {
+                const dateDiv = document.createElement('div');
+                dateDiv.innerHTML = `<h4 style="margin: 15px 0 10px;"><i class="fas fa-calendar"></i> ${date}</h4>`;
+                container.appendChild(dateDiv);
+
+                grouped[date].forEach(record => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <div style="padding: 10px;">
+                            <strong>${record.foodName}</strong> - ${record.quantity}${record.unit}
+                            <br><small>${record.nutrition?.calories || 0} kcal</small>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            });
+        } else if (tabType === 'exercise') {
+            const exercises = this.getExercises().filter(r => r.memberId === memberId);
+            const container = modal.querySelector('#memberExerciseList');
+            container.innerHTML = '';
+
+            if (exercises.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>暂无运动记录</p></div>';
+                return;
+            }
+
+            exercises.forEach(exercise => {
+                const card = this.createExerciseCard(exercise);
+                container.appendChild(card);
+            });
+        }
     }
 
     // 计算年龄
