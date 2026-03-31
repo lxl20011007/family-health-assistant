@@ -216,22 +216,32 @@ class SupabaseClient {
                 }
             }
 
-            const { data, error } = await this.supabase
-                .from(table)
-                .upsert(cloudRecord);
+            // 尝试 upsert，如果失败则尝试 insert
+            let result;
+            try {
+                result = await this.supabase
+                    .from(table)
+                    .upsert(cloudRecord, { onConflict: 'id' });
+            } catch (upsertError) {
+                // 如果 upsert 失败，尝试 insert
+                console.log('upsert 失败，尝试 insert...');
+                result = await this.supabase
+                    .from(table)
+                    .insert(cloudRecord);
+            }
+
+            const { data, error } = result;
 
             if (error) {
-                console.error(`Supabase: ${table} upsert 错误`, error);
+                console.error(`Supabase: ${table} 同步错误 - 详情:`, error);
+                console.error('发送的数据:', JSON.stringify(cloudRecord, null, 2));
+                console.error('错误信息:', error.message);
+                console.error('错误详情:', error.details);
                 throw error;
             }
             
-            // 检查 data 是否有效
-            if (!data || !Array.isArray(data) || data.length === 0) {
-                console.warn(`Supabase: ${table} upsert 返回空数据`);
-                return { success: true, cloudId: cloudRecord.id };
-            }
-
-            return { success: true, cloudId: data[0]?.id || cloudRecord.id };
+            console.log(`✅ ${table} 同步成功`);
+            return { success: true, cloudId: cloudRecord.id };
         } catch (error) {
             console.error(`Supabase: 上传${table}失败`, error);
             this.syncQueue.push({ action: 'push', table, record, localId });
