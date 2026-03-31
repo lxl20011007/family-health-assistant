@@ -20,14 +20,14 @@ class AIHealthAssistant {
 
     // 加载API密钥
     loadApiKey() {
-        this.apiKey = localStorage.getItem('deepseek_api_key');
+        this.apiKey = localStorage.getItem('zhipu_api_key');
         return this.apiKey;
     }
 
     // 保存API密钥
     saveApiKey(apiKey) {
         this.apiKey = apiKey;
-        localStorage.setItem('deepseek_api_key', apiKey);
+        localStorage.setItem('zhipu_api_key', apiKey);
         this.updateUI();
         this.showNotification('API密钥已保存', 'success');
     }
@@ -35,7 +35,7 @@ class AIHealthAssistant {
     // 清除API密钥
     clearApiKey() {
         this.apiKey = null;
-        localStorage.removeItem('deepseek_api_key');
+        localStorage.removeItem('zhipu_api_key');
         this.updateUI();
         this.showNotification('API密钥已清除', 'info');
     }
@@ -331,9 +331,9 @@ class AIHealthAssistant {
         return `最近健康记录：${summary}`;
     }
 
-    // 调用DeepSeek API
+    // 调用智谱 API
     async callDeepSeekAPI(message, context) {
-        const url = 'https://api.deepseek.com/v1/chat/completions';
+        const url = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
         
         // 构建消息数组
         const messages = [
@@ -358,7 +358,7 @@ class AIHealthAssistant {
                 'Authorization': `Bearer ${this.apiKey}`
             },
             body: JSON.stringify({
-                model: 'deepseek-chat',
+                model: 'glm-4-flash',
                 messages: messages,
                 max_tokens: 1000,
                 temperature: 0.7,
@@ -597,7 +597,7 @@ class AIHealthAssistant {
             clearBtn.disabled = false;
             sendBtn.disabled = false;
         } else {
-            apiKeyInput.placeholder = '请输入DeepSeek API密钥';
+            apiKeyInput.placeholder = '请输入智谱 API密钥';
             saveBtn.textContent = '保存密钥';
             clearBtn.disabled = true;
             sendBtn.disabled = true;
