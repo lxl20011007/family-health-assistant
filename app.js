@@ -298,10 +298,12 @@ class FamilyHealthApp {
                 const cloudRecords = healthResult.data.map(r => ({
                     id: r.id,
                     memberId: r.member_id,
-                    type: r.record_type,
+                    type: r.type || r.record_type,
                     value: r.value,
+                    systolic: r.systolic,
+                    diastolic: r.diastolic,
                     unit: r.unit,
-                    date: r.recorded_at,
+                    recordedAt: r.recorded_at ? r.recorded_at.substring(0, 10) : (r.date ? r.date.substring(0, 10) : new Date().toISOString().split('T')[0]),
                     notes: r.notes,
                     createdAt: r.created_at,
                     synced: true
@@ -323,8 +325,10 @@ class FamilyHealthApp {
                 const cloudRecords = dietResult.data.map(r => ({
                     id: r.id,
                     memberId: r.member_id,
+                    memberName: r.member_name,
                     mealType: r.meal_type,
                     date: r.date,
+                    time: r.time || '12:00',
                     foodName: r.food_name,
                     quantity: r.quantity,
                     unit: r.unit,
@@ -358,7 +362,8 @@ class FamilyHealthApp {
                     type: r.exercise_type,
                     duration: r.duration_minutes,
                     caloriesBurned: r.calories_burned,
-                    exerciseDate: r.recorded_at,
+                    exerciseDate: r.recorded_at ? r.recorded_at.substring(0, 10) : (r.exercise_date ? r.exercise_date.substring(0, 10) : new Date().toISOString().split('T')[0]),
+                    time: r.time || '12:00',
                     notes: r.notes,
                     createdAt: r.created_at,
                     synced: true
