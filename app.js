@@ -2302,9 +2302,14 @@ class FamilyHealthApp {
                 recordId = this.generateUUID();
             }
             
+            // 获取成员名字
+            const member = this.getMembers().find(m => m.id === record.memberId);
+            const memberName = member ? member.name : '';
+            
             const cloudRecord = {
                 id: recordId,
                 member_id: record.memberId,
+                member_name: memberName,
                 type: record.type,
                 value: record.value,
                 systolic: record.systolic,
