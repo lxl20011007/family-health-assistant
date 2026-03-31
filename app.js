@@ -296,18 +296,29 @@ class FamilyHealthApp {
             if (healthResult.data && healthResult.data.length > 0) {
                 const localMembers = this.getMembers();
                 const cloudRecords = healthResult.data.map(r => {
-                    // 尝试匹配成员ID
+                    // 优先使用云端的 member_name，其次尝试匹配本地成员
                     let memberId = r.member_id;
-                    const matchedMember = localMembers.find(m => 
-                        m.id === memberId || 
-                        m.name === r.member_name
-                    );
-                    if (matchedMember) {
-                        memberId = matchedMember.id;
+                    let memberName = r.member_name || '';
+                    
+                    // 如果云端没有 member_name，尝试从本地匹配
+                    if (!memberName) {
+                        const matchedMember = localMembers.find(m => m.id === memberId);
+                        if (matchedMember) {
+                            memberName = matchedMember.name;
+                            memberId = matchedMember.id;
+                        }
+                    } else {
+                        // 如果有 member_name，尝试从本地找到对应的 ID
+                        const matchedMember = localMembers.find(m => m.name === memberName);
+                        if (matchedMember) {
+                            memberId = matchedMember.id;
+                        }
                     }
+                    
                     return {
                         id: r.id,
                         memberId: memberId,
+                        memberName: memberName,
                         type: r.type || r.record_type,
                         value: r.value,
                         systolic: r.systolic,
@@ -335,19 +346,19 @@ class FamilyHealthApp {
             if (dietResult.data && dietResult.data.length > 0) {
                 const localMembers = this.getMembers();
                 const cloudRecords = dietResult.data.map(r => {
-                    // 尝试匹配成员ID
                     let memberId = r.member_id;
-                    const matchedMember = localMembers.find(m => 
-                        m.id === memberId || 
-                        m.name === r.member_name
-                    );
-                    if (matchedMember) {
-                        memberId = matchedMember.id;
+                    let memberName = r.member_name || '';
+                    if (!memberName) {
+                        const matchedMember = localMembers.find(m => m.id === memberId);
+                        if (matchedMember) { memberName = matchedMember.name; memberId = matchedMember.id; }
+                    } else {
+                        const matchedMember = localMembers.find(m => m.name === memberName);
+                        if (matchedMember) { memberId = matchedMember.id; }
                     }
                     return {
                         id: r.id,
                         memberId: memberId,
-                        memberName: r.member_name,
+                        memberName: memberName,
                         mealType: r.meal_type,
                         date: r.date,
                         time: r.time || '12:00',
@@ -381,18 +392,19 @@ class FamilyHealthApp {
             if (exerciseResult.data && exerciseResult.data.length > 0) {
                 const localMembers = this.getMembers();
                 const cloudRecords = exerciseResult.data.map(r => {
-                    // 尝试匹配成员ID
                     let memberId = r.member_id;
-                    const matchedMember = localMembers.find(m => 
-                        m.id === memberId || 
-                        m.name === r.member_name
-                    );
-                    if (matchedMember) {
-                        memberId = matchedMember.id;
+                    let memberName = r.member_name || '';
+                    if (!memberName) {
+                        const matchedMember = localMembers.find(m => m.id === memberId);
+                        if (matchedMember) { memberName = matchedMember.name; memberId = matchedMember.id; }
+                    } else {
+                        const matchedMember = localMembers.find(m => m.name === memberName);
+                        if (matchedMember) { memberId = matchedMember.id; }
                     }
                     return {
                         id: r.id,
                         memberId: memberId,
+                        memberName: memberName,
                         type: r.exercise_type,
                         duration: r.duration_minutes,
                         caloriesBurned: r.calories_burned,
