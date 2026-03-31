@@ -294,19 +294,31 @@ class FamilyHealthApp {
             // 下载健康记录
             const healthResult = await supabaseClient.pullFromCloud('health_records');
             if (healthResult.data && healthResult.data.length > 0) {
-                const cloudRecords = healthResult.data.map(r => ({
-                    id: r.id,
-                    memberId: r.member_id,
-                    type: r.type || r.record_type,
-                    value: r.value,
-                    systolic: r.systolic,
-                    diastolic: r.diastolic,
-                    unit: r.unit,
-                    recordedAt: r.recorded_at ? r.recorded_at.substring(0, 10) : (r.date ? r.date.substring(0, 10) : new Date().toISOString().split('T')[0]),
-                    notes: r.notes,
-                    createdAt: r.created_at,
-                    synced: true
-                }));
+                const localMembers = this.getMembers();
+                const cloudRecords = healthResult.data.map(r => {
+                    // 尝试匹配成员ID
+                    let memberId = r.member_id;
+                    const matchedMember = localMembers.find(m => 
+                        m.id === memberId || 
+                        m.name === r.member_name
+                    );
+                    if (matchedMember) {
+                        memberId = matchedMember.id;
+                    }
+                    return {
+                        id: r.id,
+                        memberId: memberId,
+                        type: r.type || r.record_type,
+                        value: r.value,
+                        systolic: r.systolic,
+                        diastolic: r.diastolic,
+                        unit: r.unit,
+                        recordedAt: r.recorded_at ? r.recorded_at.substring(0, 10) : (r.date ? r.date.substring(0, 10) : new Date().toISOString().split('T')[0]),
+                        notes: r.notes,
+                        createdAt: r.created_at,
+                        synced: true
+                    };
+                });
                 const localRecords = this.getHealthRecords();
                 const merged = [...cloudRecords];
                 for (const local of localRecords) {
@@ -321,26 +333,38 @@ class FamilyHealthApp {
             // 下载饮食记录
             const dietResult = await supabaseClient.pullFromCloud('diet_records');
             if (dietResult.data && dietResult.data.length > 0) {
-                const cloudRecords = dietResult.data.map(r => ({
-                    id: r.id,
-                    memberId: r.member_id,
-                    memberName: r.member_name,
-                    mealType: r.meal_type,
-                    date: r.date,
-                    time: r.time || '12:00',
-                    foodName: r.food_name,
-                    quantity: r.quantity,
-                    unit: r.unit,
-                    nutrition: {
-                        calories: r.calories,
-                        protein: r.protein,
-                        fat: r.fat,
-                        carbs: r.carbs,
-                        fiber: r.fiber
-                    },
-                    createdAt: r.created_at,
-                    synced: true
-                }));
+                const localMembers = this.getMembers();
+                const cloudRecords = dietResult.data.map(r => {
+                    // 尝试匹配成员ID
+                    let memberId = r.member_id;
+                    const matchedMember = localMembers.find(m => 
+                        m.id === memberId || 
+                        m.name === r.member_name
+                    );
+                    if (matchedMember) {
+                        memberId = matchedMember.id;
+                    }
+                    return {
+                        id: r.id,
+                        memberId: memberId,
+                        memberName: r.member_name,
+                        mealType: r.meal_type,
+                        date: r.date,
+                        time: r.time || '12:00',
+                        foodName: r.food_name,
+                        quantity: r.quantity,
+                        unit: r.unit,
+                        nutrition: {
+                            calories: r.calories,
+                            protein: r.protein,
+                            fat: r.fat,
+                            carbs: r.carbs,
+                            fiber: r.fiber
+                        },
+                        createdAt: r.created_at,
+                        synced: true
+                    };
+                });
                 const localRecords = this.getDietRecords();
                 const merged = [...cloudRecords];
                 for (const local of localRecords) {
@@ -355,18 +379,30 @@ class FamilyHealthApp {
             // 下载运动记录
             const exerciseResult = await supabaseClient.pullFromCloud('exercise_records');
             if (exerciseResult.data && exerciseResult.data.length > 0) {
-                const cloudRecords = exerciseResult.data.map(r => ({
-                    id: r.id,
-                    memberId: r.member_id,
-                    type: r.exercise_type,
-                    duration: r.duration_minutes,
-                    caloriesBurned: r.calories_burned,
-                    exerciseDate: r.recorded_at ? r.recorded_at.substring(0, 10) : (r.exercise_date ? r.exercise_date.substring(0, 10) : new Date().toISOString().split('T')[0]),
-                    time: r.time || '12:00',
-                    notes: r.notes,
-                    createdAt: r.created_at,
-                    synced: true
-                }));
+                const localMembers = this.getMembers();
+                const cloudRecords = exerciseResult.data.map(r => {
+                    // 尝试匹配成员ID
+                    let memberId = r.member_id;
+                    const matchedMember = localMembers.find(m => 
+                        m.id === memberId || 
+                        m.name === r.member_name
+                    );
+                    if (matchedMember) {
+                        memberId = matchedMember.id;
+                    }
+                    return {
+                        id: r.id,
+                        memberId: memberId,
+                        type: r.exercise_type,
+                        duration: r.duration_minutes,
+                        caloriesBurned: r.calories_burned,
+                        exerciseDate: r.recorded_at ? r.recorded_at.substring(0, 10) : (r.exercise_date ? r.exercise_date.substring(0, 10) : new Date().toISOString().split('T')[0]),
+                        time: r.time || '12:00',
+                        notes: r.notes,
+                        createdAt: r.created_at,
+                        synced: true
+                    };
+                });
                 const localRecords = this.getExercises();
                 const merged = [...cloudRecords];
                 for (const local of localRecords) {
@@ -1020,6 +1056,7 @@ class FamilyHealthApp {
             if (!mealGroups[key]) {
                 mealGroups[key] = {
                     memberId: record.memberId,
+                    memberName: record.memberName || memberMap[record.memberId] || '',
                     mealType: record.mealType,
                     time: record.time,
                     date: record.date,
@@ -1056,7 +1093,7 @@ class FamilyHealthApp {
             const mealName = mealNames[group.mealType] || '加餐';
             const mealIcon = mealIcons[group.mealType] || 'fa-utensils';
             const time = group.time || '未记录时间';
-            const memberName = memberMap[group.memberId] || '未知成员';
+            const memberName = group.memberName || memberMap[group.memberId] || '未知成员';
             
             // 计算本餐总营养
             let totalCal = 0, totalCarbs = 0, totalProtein = 0, totalFat = 0, totalFiber = 0;
@@ -1694,10 +1731,10 @@ class FamilyHealthApp {
             heartRate: '心率'
         }[recordType] || '健康';
 
-        // 获取成员名称
+        // 获取成员名称（优先从本地匹配，否则用云端存储的memberName）
         const members = this.getMembers();
         const member = members.find(m => m.id === record.memberId);
-        const memberName = member ? member.name : '未知成员';
+        const memberName = member ? member.name : (record.memberName || '未知成员');
 
         card.innerHTML = `
             <div class="card-header">
@@ -3064,10 +3101,10 @@ class FamilyHealthApp {
         const card = document.createElement('div');
         card.className = 'card exercise-item';
         
-        // 获取成员名称
+        // 获取成员名称（优先从本地匹配，否则用云端存储的memberName）
         const members = this.getMembers();
         const member = members.find(m => m.id === exercise.memberId);
-        const memberName = member ? member.name : '未知成员';
+        const memberName = member ? member.name : (exercise.memberName || '未知成员');
 
         const duration = exercise.duration >= 60
             ? `${Math.floor(exercise.duration / 60)}小时${exercise.duration % 60}分钟`
