@@ -2167,14 +2167,34 @@ class FamilyHealthApp {
 
     // 保存健康记录
     saveHealthRecord() {
-        // 使用表单中选择的成员
-        const memberId = document.getElementById('healthMember').value;
+        // 优先从当前可见的弹窗中读取，避免多个同名ID冲突
+        const allHealthTypes = document.querySelectorAll('#healthType');
+        const allHealthMembers = document.querySelectorAll('#healthMember');
+        
+        // 找到当前可见的那个
+        let typeEl = null;
+        let memberEl = null;
+        allHealthTypes.forEach(el => {
+            if (el.offsetParent !== null) typeEl = el;
+        });
+        allHealthMembers.forEach(el => {
+            if (el.offsetParent !== null) memberEl = el;
+        });
+        
+        // 如果没找到可见的，退回到第一个
+        if (!typeEl) typeEl = allHealthTypes[allHealthTypes.length - 1];
+        if (!memberEl) memberEl = allHealthMembers[allHealthMembers.length - 1];
+        
+        const memberId = memberEl ? memberEl.value : '';
+        const type = typeEl ? typeEl.value : '';
+        
+        console.log('DEBUG - memberId:', memberId, 'type:', type);
+        
         if (!memberId) {
             alert('请选择家庭成员！');
             return false;
         }
         
-        const type = document.getElementById('healthType').value;
         if (!type) {
             alert('请选择记录类型！');
             return false;
@@ -2186,15 +2206,30 @@ class FamilyHealthApp {
         let value, systolic, diastolic;
 
         if (type === 'blood_pressure') {
-            systolic = parseInt(document.getElementById('systolic').value);
-            diastolic = parseInt(document.getElementById('diastolic').value);
+            // 找到可见的血压输入框
+            const allSystolic = document.querySelectorAll('#systolic');
+            const allDiastolic = document.querySelectorAll('#diastolic');
+            let systolicEl = null, diastolicEl = null;
+            allSystolic.forEach(el => { if (el.offsetParent !== null) systolicEl = el; });
+            allDiastolic.forEach(el => { if (el.offsetParent !== null) diastolicEl = el; });
+            if (!systolicEl) systolicEl = allSystolic[allSystolic.length - 1];
+            if (!diastolicEl) diastolicEl = allDiastolic[allDiastolic.length - 1];
+            
+            systolic = parseInt(systolicEl ? systolicEl.value : 0);
+            diastolic = parseInt(diastolicEl ? diastolicEl.value : 0);
             
             if (!systolic || !diastolic || systolic < 50 || systolic > 250 || diastolic < 30 || diastolic > 150) {
                 alert('请输入有效的血压值！');
                 return false;
             }
         } else if (type) {
-            value = parseFloat(document.getElementById('healthValue').value);
+            // 找到可见的数值输入框
+            const allHealthValues = document.querySelectorAll('#healthValue');
+            let healthValueEl = null;
+            allHealthValues.forEach(el => { if (el.offsetParent !== null) healthValueEl = el; });
+            if (!healthValueEl) healthValueEl = allHealthValues[allHealthValues.length - 1];
+            
+            value = parseFloat(healthValueEl ? healthValueEl.value : 0);
             
             if (!value || value <= 0) {
                 alert('请输入有效的数值！');
