@@ -162,7 +162,7 @@ const EXERCISE_DATABASE = {
     '健身房': { 
         name: '健身房',
         icon: 'fa-dumbbell',
-        caloriesPerMin: 9,
+        caloriesPerMin: 7,
         description: '综合力量训练'
     },
     '瑜伽': { 
