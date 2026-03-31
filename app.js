@@ -3546,7 +3546,7 @@ class FamilyHealthApp {
             { name: '跑步', icon: 'fa-running', caloriesPerMin: 10 },
             { name: '快走', icon: 'fa-person-walking', caloriesPerMin: 5 },
             { name: '游泳', icon: 'fa-person-swimming', caloriesPerMin: 11 },
-            { name: '健身房', icon: 'fa-dumbbell', caloriesPerMin: 9 }
+            { name: '健身房', icon: 'fa-dumbbell', caloriesPerMin: 7 }
         ];
 
         const exerciseOptions = exerciseTypes.map(ex =>
@@ -3665,17 +3665,19 @@ class FamilyHealthApp {
         form.addEventListener('submit', (e) => {
             e.preventDefault();
 
-            const memberId = document.getElementById('exerciseMember').value;
+            // 从当前可见的弹窗中读取值
+            const memberId = modalContainer.querySelector('#exerciseMember').value;
+            const selectVal = modalContainer.querySelector('#exerciseType').value;
+            const customVal = modalContainer.querySelector('#exerciseCustomType')?.value.trim() || '';
+            const duration = parseInt(modalContainer.querySelector('#exerciseDuration').value);
+            const notes = modalContainer.querySelector('#exerciseNotes')?.value.trim() || '';
+
             if (!memberId) {
                 alert('请选择家庭成员！');
                 return;
             }
 
-            const selectVal = typeSelect.value;
-            const customVal = customInput.value.trim();
             const exType = selectVal === '__custom__' ? customVal : selectVal;
-            const duration = parseInt(durationInput.value);
-            const notes = notesInput ? notesInput.value.trim() : '';
 
             if (!exType) {
                 alert('请选择或输入运动类型！');
