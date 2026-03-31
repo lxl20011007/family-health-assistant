@@ -1331,10 +1331,10 @@ class FamilyHealthApp {
                     </div>
                     
                     <!-- 饮食日期筛选 -->
-                    <div id="dietDateFilter" class="date-filter" style="display: none; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
-                        <label style="white-space: nowrap;">筛选日期：</label>
-                        <input type="date" id="filterDietDate" class="form-control" style="width: 180px;">
-                        <button class="btn btn-primary btn-sm" id="filterDietBtn">
+                    <div id="dietDateFilter" class="date-filter" style="display: none; margin-bottom: 15px;">
+                        <label style="margin-right: 10px; white-space: nowrap;">筛选日期：</label>
+                        <input type="date" id="filterDietDate" class="form-control" style="width: 150px; display: inline-block;">
+                        <button class="btn btn-primary btn-sm" id="filterDietBtn" style="margin-left: 8px;">
                             <i class="fas fa-search"></i> 查询
                         </button>
                         <button class="btn btn-secondary btn-sm" id="clearDietFilterBtn">
@@ -1343,10 +1343,10 @@ class FamilyHealthApp {
                     </div>
                     
                     <!-- 运动日期筛选 -->
-                    <div id="exerciseDateFilter" class="date-filter" style="display: none; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
-                        <label style="white-space: nowrap;">筛选日期：</label>
-                        <input type="date" id="filterExerciseDate" class="form-control" style="width: 180px;">
-                        <button class="btn btn-primary btn-sm" id="filterExerciseBtn">
+                    <div id="exerciseDateFilter" class="date-filter" style="display: none; margin-bottom: 15px;">
+                        <label style="margin-right: 10px; white-space: nowrap;">筛选日期：</label>
+                        <input type="date" id="filterExerciseDate" class="form-control" style="width: 150px; display: inline-block;">
+                        <button class="btn btn-primary btn-sm" id="filterExerciseBtn" style="margin-left: 8px;">
                             <i class="fas fa-search"></i> 查询
                         </button>
                         <button class="btn btn-secondary btn-sm" id="clearExerciseFilterBtn">
@@ -1442,7 +1442,7 @@ class FamilyHealthApp {
 
     // 加载指定日期的饮食记录
     loadMemberDietByDate(memberId, date, modal) {
-        const dietRecords = this.getDietRecords().filter(r => r.memberId === memberId && r.date === date);
+        const dietRecords = this.getDietRecords().filter(r => r.memberId === memberId && (r.date === date || r.recordedAt === date));
         const container = modal.querySelector('#memberDietList');
         container.innerHTML = '';
 
@@ -1453,10 +1453,11 @@ class FamilyHealthApp {
 
         const grouped = {};
         dietRecords.forEach(r => {
-            const key = `${r.date}_${r.mealType}_${r.time}`;
+            const recordDate = r.date || r.recordedAt;
+            const key = `${recordDate}_${r.mealType}_${r.time}`;
             if (!grouped[key]) {
                 grouped[key] = {
-                    date: r.date,
+                    date: recordDate,
                     mealType: r.mealType,
                     time: r.time,
                     records: []
