@@ -226,6 +226,40 @@ body {
     font-size: 16px;
 }
 
+/* 饮食记录行样式 */
+.diet-food-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+    gap: 12px;
+}
+
+.diet-food-row:last-child {
+    border-bottom: none;
+}
+
+.diet-food-row .food-name {
+    flex: 1;
+    font-weight: 500;
+    color: #333;
+}
+
+.diet-food-row .food-qty {
+    color: #666;
+    font-size: 14px;
+    min-width: 60px;
+    text-align: center;
+}
+
+.diet-food-row .food-cal {
+    color: #e74c3c;
+    font-size: 14px;
+    font-weight: 600;
+    min-width: 70px;
+    text-align: right;
+}
+
 /* ==================== 欢迎信息 ==================== */
 .welcome-message {
     margin-bottom: 20px;

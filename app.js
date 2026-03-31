@@ -1392,29 +1392,67 @@ class FamilyHealthApp {
                 return;
             }
 
+            // 按日期和餐次分组
             const grouped = {};
             dietRecords.forEach(r => {
-                const key = r.date;
-                if (!grouped[key]) grouped[key] = [];
-                grouped[key].push(r);
+                const key = `${r.date}_${r.mealType}_${r.time}`;
+                if (!grouped[key]) {
+                    grouped[key] = {
+                        date: r.date,
+                        mealType: r.mealType,
+                        time: r.time,
+                        records: []
+                    };
+                }
+                grouped[key].records.push(r);
             });
 
-            Object.keys(grouped).sort().reverse().forEach(date => {
-                const dateDiv = document.createElement('div');
-                dateDiv.innerHTML = `<h4 style="margin: 15px 0 10px;"><i class="fas fa-calendar"></i> ${date}</h4>`;
-                container.appendChild(dateDiv);
+            const mealNames = {
+                breakfast: '早餐',
+                lunch: '午餐',
+                dinner: '晚餐',
+                snack: '加餐'
+            };
 
-                grouped[date].forEach(record => {
-                    const card = document.createElement('div');
-                    card.className = 'card';
-                    card.innerHTML = `
-                        <div style="padding: 10px;">
-                            <strong>${record.foodName}</strong> - ${record.quantity}${record.unit}
-                            <br><small>${record.nutrition?.calories || 0} kcal</small>
+            Object.keys(grouped).sort().reverse().forEach(key => {
+                const group = grouped[key];
+                const mealName = mealNames[group.mealType] || '加餐';
+                
+                // 创建餐次卡片
+                const mealCard = document.createElement('div');
+                mealCard.className = 'card';
+                mealCard.style.marginBottom = '12px';
+                
+                // 计算总热量
+                const totalCalories = group.records.reduce((sum, r) => sum + (r.nutrition?.calories || 0), 0);
+                
+                // 生成食物列表（每行一个）
+                const foodItems = group.records.map(r => {
+                    return `<div class="diet-food-row">
+                        <span class="food-name">${r.foodName}</span>
+                        <span class="food-qty">${r.quantity}${r.unit}</span>
+                        <span class="food-cal">${r.nutrition?.calories || 0} kcal</span>
+                    </div>`;
+                }).join('');
+                
+                mealCard.innerHTML = `
+                    <div class="meal-header" style="padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px 8px 0 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 600; font-size: 16px;">
+                                <i class="fas fa-utensils"></i> ${mealName}
+                            </span>
+                            <span style="font-size: 14px; opacity: 0.9;">${group.time || ''}</span>
                         </div>
-                    `;
-                    container.appendChild(card);
-                });
+                        <div style="margin-top: 4px; font-size: 13px; opacity: 0.85;">
+                            ${group.date} · 共 ${totalCalories} kcal
+                        </div>
+                    </div>
+                    <div class="meal-foods" style="padding: 12px;">
+                        ${foodItems}
+                    </div>
+                `;
+                
+                container.appendChild(mealCard);
             });
         } else if (tabType === 'exercise') {
             const exercises = this.getExercises().filter(r => r.memberId === memberId);
