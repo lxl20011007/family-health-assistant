@@ -168,10 +168,15 @@
 
                 <!-- AI问诊 -->
                 <div id="ai-consultation" class="tab-content">
-                    <h2><i class="fas fa-robot"></i> AI健康助手</h2>
+                    <h2>
+                        <i class="fas fa-robot"></i> AI健康助手
+                        <button id="toggleApiConfigBtn" class="btn btn-secondary btn-sm" title="API密钥配置" style="margin-left: auto; font-size: 13px;">
+                            <i class="fas fa-key"></i> 配置密钥
+                        </button>
+                    </h2>
                     <div class="ai-consultation-container">
                         <!-- API密钥配置区域 -->
-                        <div class="api-config-section">
+                        <div class="api-config-section" id="apiConfigSection">
                             <h3><i class="fas fa-key"></i> API密钥配置</h3>
                             <div class="api-input-group">
                                 <input type="password" id="apiKeyInput" placeholder="请输入智谱 API密钥" class="api-key-input">

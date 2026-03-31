@@ -14,6 +14,7 @@ class AIHealthAssistant {
     init() {
         this.loadApiKey();
         this.bindEvents();
+        this.bindToggleApiConfig();
         this.loadConversationHistory();
         this.updateUI();
     }
@@ -590,18 +591,43 @@ class AIHealthAssistant {
         const saveBtn = document.getElementById('saveApiKeyBtn');
         const clearBtn = document.getElementById('clearApiKeyBtn');
         const sendBtn = document.getElementById('sendMessageBtn');
+        const apiConfigSection = document.getElementById('apiConfigSection');
+        const toggleBtn = document.getElementById('toggleApiConfigBtn');
         
         if (this.apiKey) {
             apiKeyInput.placeholder = 'API密钥已配置（输入新密钥可更新）';
             saveBtn.textContent = '更新密钥';
             clearBtn.disabled = false;
             sendBtn.disabled = false;
+            // 已配置密钥：隐藏配置区
+            if (apiConfigSection) apiConfigSection.style.display = 'none';
+            if (toggleBtn) {
+                toggleBtn.innerHTML = '<i class="fas fa-key"></i> 已配置';
+                toggleBtn.style.color = '#28a745';
+            }
         } else {
             apiKeyInput.placeholder = '请输入智谱 API密钥';
             saveBtn.textContent = '保存密钥';
             clearBtn.disabled = true;
             sendBtn.disabled = true;
+            // 未配置密钥：显示配置区
+            if (apiConfigSection) apiConfigSection.style.display = 'block';
+            if (toggleBtn) {
+                toggleBtn.innerHTML = '<i class="fas fa-key"></i> 配置密钥';
+                toggleBtn.style.color = '';
+            }
         }
+    }
+
+    // 绑定切换API配置区域按钮
+    bindToggleApiConfig() {
+        const toggleBtn = document.getElementById('toggleApiConfigBtn');
+        const apiConfigSection = document.getElementById('apiConfigSection');
+        if (!toggleBtn || !apiConfigSection) return;
+        toggleBtn.addEventListener('click', () => {
+            const isHidden = apiConfigSection.style.display === 'none';
+            apiConfigSection.style.display = isHidden ? 'block' : 'none';
+        });
     }
 
     // 显示通知
