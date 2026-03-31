@@ -3590,6 +3590,11 @@ class FamilyHealthApp {
                                 <input type="number" id="exerciseDuration" class="form-control" required
                                        min="1" max="600" placeholder="例如：30" value="30">
                             </div>
+                            
+                            <div class="form-group">
+                                <label for="exerciseTime"><i class="fas fa-clock"></i> 运动时间 *</label>
+                                <input type="time" id="exerciseTime" class="form-control" value="${new Date().toTimeString().slice(0, 5)}">
+                            </div>
 
                             <!-- 热量预估 -->
                             <div class="exercise-calorie-preview" id="exerciseCaloriePreview">
@@ -3681,6 +3686,7 @@ class FamilyHealthApp {
             const customVal = modalContainer.querySelector('#exerciseCustomType')?.value.trim() || '';
             const duration = parseInt(modalContainer.querySelector('#exerciseDuration').value);
             const exerciseDate = modalContainer.querySelector('#exerciseDate')?.value || new Date().toISOString().split('T')[0];
+            const exerciseTime = modalContainer.querySelector('#exerciseTime')?.value || new Date().toTimeString().slice(0, 5);
             const notes = modalContainer.querySelector('#exerciseNotes')?.value.trim() || '';
 
             if (!memberId) {
@@ -3710,7 +3716,7 @@ class FamilyHealthApp {
                 type: exType,
                 duration: duration,
                 exerciseDate: exerciseDate,
-                time: new Date().toTimeString().slice(0, 5),
+                time: exerciseTime,
                 caloriesBurned: caloriesBurned,
                 notes: notes,
                 createdAt: new Date().toISOString()
