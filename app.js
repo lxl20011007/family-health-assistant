@@ -400,9 +400,14 @@ class FamilyHealthApp {
         }
 
         try {
+            // 获取成员名字
+            const member = this.getMembers().find(m => m.id === record.memberId);
+            const memberName = member ? member.name : '';
+
             const cloudRecord = {
                 id: record.id,
                 member_id: record.memberId,
+                member_name: memberName,
                 meal_type: record.mealType,
                 date: record.date,
                 food_name: record.foodName,
@@ -3737,15 +3742,19 @@ class FamilyHealthApp {
         }
 
         try {
+            // 获取成员名字
+            const member = this.getMembers().find(m => m.id === exercise.memberId);
+            const memberName = member ? member.name : '';
+
             const cloudRecord = {
                 id: exercise.id,
                 member_id: exercise.memberId,
-                type: exercise.type,
-                duration: exercise.duration,
-                exercise_date: exercise.exerciseDate,
-                time: exercise.time,
+                member_name: memberName,
+                exercise_type: exercise.type,
+                duration_minutes: exercise.duration,
+                recorded_at: exercise.exerciseDate,
                 calories_burned: exercise.caloriesBurned,
-                notes: exercise.notes,
+                notes: exercise.notes || '',
                 created_at: exercise.createdAt,
                 updated_at: new Date().toISOString()
             };
