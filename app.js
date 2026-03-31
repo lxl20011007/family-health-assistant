@@ -15,12 +15,11 @@ class FamilyHealthApp {
             this.loadMembers();
             this.updateStats();
 
-            // 设置日期默认值为今天
+            // 设置饮食日期默认值为今天（饮食记录默认显示当天）
             const today = new Date().toISOString().split('T')[0];
             const dietDateEl = document.getElementById('dietDate');
             if (dietDateEl) dietDateEl.value = today;
-            const exerciseDateEl = document.getElementById('exerciseDate');
-            if (exerciseDateEl) exerciseDateEl.value = today;
+            // 注意：运动记录不设置默认日期，显示全部记录
             
             // 🔥 关键：启动自动同步机制
             this.startAutoSync();
@@ -2974,9 +2973,14 @@ class FamilyHealthApp {
 
     // 加载运动记录 - 按日期筛选并显示总热量
     loadExercises() {
-        const date = document.getElementById('exerciseDate') ? document.getElementById('exerciseDate').value : new Date().toISOString().split('T')[0];
+        const dateInput = document.getElementById('exerciseDate');
+        const date = dateInput ? dateInput.value : '';
         const exercises = this.getExercises(null);
-        const filteredExercises = exercises.filter(ex => ex.exerciseDate === date);
+        
+        // 有日期选择时按日期过滤，否则显示全部
+        const filteredExercises = date 
+            ? exercises.filter(ex => ex.exerciseDate === date)
+            : exercises;
 
         const exerciseList = document.getElementById('exerciseList');
         if (!exerciseList) return;
@@ -2986,15 +2990,19 @@ class FamilyHealthApp {
             exerciseList.innerHTML = `
                 <div class="empty-state">
                     <i class="fas fa-dumbbell"></i>
-                    <p>暂无运动记录，点击上方按钮添加</p>
+                    <p>${date ? '当天暂无运动记录' : '暂无运动记录，点击上方按钮添加'}</p>
                 </div>
             `;
             this.renderExerciseSummary([]);
             return;
         }
 
-        // 按时间倒序排序
-        filteredExercises.sort((a, b) => (b.time || '00:00').localeCompare(a.time || '00:00'));
+        // 按日期+时间倒序排序
+        filteredExercises.sort((a, b) => {
+            const dateA = (a.exerciseDate || '') + (a.time || '00:00');
+            const dateB = (b.exerciseDate || '') + (b.time || '00:00');
+            return dateB.localeCompare(dateA);
+        });
 
         // 显示汇总
         this.renderExerciseSummary(filteredExercises);
