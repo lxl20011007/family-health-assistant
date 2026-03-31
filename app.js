@@ -3600,6 +3600,11 @@ class FamilyHealthApp {
                                 <label for="exerciseNotes"><i class="fas fa-sticky-note"></i> 备注（可选）</label>
                                 <textarea id="exerciseNotes" class="form-control" rows="2" placeholder="例如：运动强度、感觉等"></textarea>
                             </div>
+                            
+                            <div class="form-group">
+                                <label for="exerciseDate"><i class="fas fa-calendar"></i> 运动日期 *</label>
+                                <input type="date" id="exerciseDate" class="form-control" value="${new Date().toISOString().split('T')[0]}">
+                            </div>
 
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" id="cancelExerciseBtn">取消</button>
@@ -3670,6 +3675,7 @@ class FamilyHealthApp {
             const selectVal = modalContainer.querySelector('#exerciseType').value;
             const customVal = modalContainer.querySelector('#exerciseCustomType')?.value.trim() || '';
             const duration = parseInt(modalContainer.querySelector('#exerciseDuration').value);
+            const exerciseDate = modalContainer.querySelector('#exerciseDate')?.value || new Date().toISOString().split('T')[0];
             const notes = modalContainer.querySelector('#exerciseNotes')?.value.trim() || '';
 
             if (!memberId) {
@@ -3698,7 +3704,7 @@ class FamilyHealthApp {
                 memberId: memberId,
                 type: exType,
                 duration: duration,
-                exerciseDate: new Date().toISOString().split('T')[0],
+                exerciseDate: exerciseDate,
                 time: new Date().toTimeString().slice(0, 5),
                 caloriesBurned: caloriesBurned,
                 notes: notes,
@@ -3707,6 +3713,12 @@ class FamilyHealthApp {
 
             exercises.push(newExercise);
             this.saveExercises(exercises);
+            
+            // 🔥 修复：保存后更新日期选择器并重新加载列表
+            const exerciseDateInput = document.getElementById('exerciseDate');
+            if (exerciseDateInput) {
+                exerciseDateInput.value = exerciseDate;
+            }
             this.loadExercises();
             this.updateStats();
 
