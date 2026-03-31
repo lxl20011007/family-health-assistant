@@ -1330,6 +1330,30 @@ class FamilyHealthApp {
                         </button>
                     </div>
                     
+                    <!-- 饮食日期筛选 -->
+                    <div id="dietDateFilter" class="date-filter" style="display: none; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        <label style="white-space: nowrap;">筛选日期：</label>
+                        <input type="date" id="filterDietDate" class="form-control" style="width: 180px;">
+                        <button class="btn btn-primary btn-sm" id="filterDietBtn">
+                            <i class="fas fa-search"></i> 查询
+                        </button>
+                        <button class="btn btn-secondary btn-sm" id="clearDietFilterBtn">
+                            <i class="fas fa-times"></i> 全部
+                        </button>
+                    </div>
+                    
+                    <!-- 运动日期筛选 -->
+                    <div id="exerciseDateFilter" class="date-filter" style="display: none; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        <label style="white-space: nowrap;">筛选日期：</label>
+                        <input type="date" id="filterExerciseDate" class="form-control" style="width: 180px;">
+                        <button class="btn btn-primary btn-sm" id="filterExerciseBtn">
+                            <i class="fas fa-search"></i> 查询
+                        </button>
+                        <button class="btn btn-secondary btn-sm" id="clearExerciseFilterBtn">
+                            <i class="fas fa-times"></i> 全部
+                        </button>
+                    </div>
+                    
                     <div id="health-tab" class="tab-content active">
                         <div id="memberHealthList"></div>
                     </div>
@@ -1350,18 +1374,158 @@ class FamilyHealthApp {
 
         const tabBtns = modal.querySelectorAll('.tab-btn');
         const tabContents = modal.querySelectorAll('.tab-content');
+        const dietDateFilter = modal.querySelector('#dietDateFilter');
+        const exerciseDateFilter = modal.querySelector('#exerciseDateFilter');
+        
+        // 日期筛选按钮事件
+        modal.querySelector('#filterDietBtn').addEventListener('click', () => {
+            const date = modal.querySelector('#filterDietDate').value;
+            if (!date) { alert('请选择日期'); return; }
+            this.loadMemberDietByDate(memberId, date, modal);
+        });
+        modal.querySelector('#clearDietFilterBtn').addEventListener('click', () => {
+            modal.querySelector('#filterDietDate').value = '';
+            this.loadMemberHealthData(memberId, 'diet', modal);
+        });
+        modal.querySelector('#filterExerciseBtn').addEventListener('click', () => {
+            const date = modal.querySelector('#filterExerciseDate').value;
+            if (!date) { alert('请选择日期'); return; }
+            this.loadMemberExerciseByDate(memberId, date, modal);
+        });
+        modal.querySelector('#clearExerciseFilterBtn').addEventListener('click', () => {
+            modal.querySelector('#filterExerciseDate').value = '';
+            this.loadMemberHealthData(memberId, 'exercise', modal);
+        });
         
         tabBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 tabBtns.forEach(b => b.classList.remove('active'));
                 tabContents.forEach(c => c.classList.remove('active'));
+                dietDateFilter.style.display = 'none';
+                exerciseDateFilter.style.display = 'none';
+                
                 btn.classList.add('active');
                 modal.querySelector(`#${btn.dataset.tab}-tab`).classList.add('active');
+                
+                if (btn.dataset.tab === 'diet') {
+                    dietDateFilter.style.display = 'flex';
+                } else if (btn.dataset.tab === 'exercise') {
+                    exerciseDateFilter.style.display = 'flex';
+                }
+                
                 this.loadMemberHealthData(memberId, btn.dataset.tab, modal);
             });
         });
 
         this.loadMemberHealthData(memberId, 'health', modal);
+    }
+
+    // 按日期筛选成员饮食记录
+    filterMemberDietByDate(memberId, modal) {
+        const date = modal.querySelector('#filterDietDate').value;
+        if (!date) {
+            alert('请选择日期');
+            return;
+        }
+        this.loadMemberDietByDate(memberId, date, modal);
+    }
+
+    // 按日期筛选成员运动记录
+    filterMemberExerciseByDate(memberId, modal) {
+        const date = modal.querySelector('#filterExerciseDate').value;
+        if (!date) {
+            alert('请选择日期');
+            return;
+        }
+        this.loadMemberExerciseByDate(memberId, date, modal);
+    }
+
+    // 加载指定日期的饮食记录
+    loadMemberDietByDate(memberId, date, modal) {
+        const dietRecords = this.getDietRecords().filter(r => r.memberId === memberId && r.date === date);
+        const container = modal.querySelector('#memberDietList');
+        container.innerHTML = '';
+
+        if (dietRecords.length === 0) {
+            container.innerHTML = `<div class="empty-state"><p>${date} 暂无饮食记录</p></div>`;
+            return;
+        }
+
+        const grouped = {};
+        dietRecords.forEach(r => {
+            const key = `${r.date}_${r.mealType}_${r.time}`;
+            if (!grouped[key]) {
+                grouped[key] = {
+                    date: r.date,
+                    mealType: r.mealType,
+                    time: r.time,
+                    records: []
+                };
+            }
+            grouped[key].records.push(r);
+        });
+
+        const mealNames = {
+            breakfast: '早餐',
+            lunch: '午餐',
+            dinner: '晚餐',
+            snack: '加餐'
+        };
+
+        const mealIcons = {
+            breakfast: 'fa-sun',
+            lunch: 'fa-cloud-sun',
+            dinner: 'fa-moon',
+            snack: 'fa-cookie'
+        };
+
+        Object.keys(grouped).sort().forEach(key => {
+            const group = grouped[key];
+            const mealName = mealNames[group.mealType] || '加餐';
+            const mealIcon = mealIcons[group.mealType] || 'fa-utensils';
+            
+            const mealCard = document.createElement('div');
+            mealCard.className = 'card';
+            mealCard.style.marginBottom = '12px';
+            
+            const totalCalories = group.records.reduce((sum, r) => sum + (r.nutrition?.calories || 0), 0);
+            
+            const foodItems = group.records.map(r => {
+                return `<span class="diet-food-item">${r.foodName} ${r.quantity}${r.unit} · ${r.nutrition?.calories || 0}kcal</span>`;
+            }).join('');
+            
+            mealCard.innerHTML = `
+                <div class="meal-header" style="padding: 12px; background: #f8f9fa; border-radius: 8px 8px 0 0; border-left: 4px solid #ffc107;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fas ${mealIcon}" style="color: #ffc107; font-size: 18px;"></i>
+                        <span style="font-weight: 600; font-size: 16px; color: #333;">${mealName}</span>
+                        <span style="margin-left: auto; color: #e74c3c; font-weight: 600;">${totalCalories} kcal</span>
+                    </div>
+                </div>
+                <div class="meal-foods" style="padding: 12px; display: flex; flex-wrap: wrap; gap: 12px;">
+                    ${foodItems}
+                </div>
+            `;
+            
+            container.appendChild(mealCard);
+        });
+    }
+
+    // 加载指定日期的运动记录
+    loadMemberExerciseByDate(memberId, date, modal) {
+        const exercises = this.getExercises().filter(r => r.memberId === memberId && r.exerciseDate === date);
+        const container = modal.querySelector('#memberExerciseList');
+        container.innerHTML = '';
+
+        if (exercises.length === 0) {
+            container.innerHTML = `<div class="empty-state"><p>${date} 暂无运动记录</p></div>`;
+            return;
+        }
+
+        exercises.forEach(exercise => {
+            const card = this.createExerciseCard(exercise);
+            container.appendChild(card);
+        });
     }
 
     // 加载成员的健康数据
