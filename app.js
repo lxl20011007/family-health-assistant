@@ -1414,9 +1414,17 @@ class FamilyHealthApp {
                 snack: '加餐'
             };
 
+            const mealIcons = {
+                breakfast: 'fa-sun',
+                lunch: 'fa-cloud-sun',
+                dinner: 'fa-moon',
+                snack: 'fa-cookie'
+            };
+
             Object.keys(grouped).sort().reverse().forEach(key => {
                 const group = grouped[key];
                 const mealName = mealNames[group.mealType] || '加餐';
+                const mealIcon = mealIcons[group.mealType] || 'fa-utensils';
                 
                 // 创建餐次卡片
                 const mealCard = document.createElement('div');
@@ -1426,28 +1434,22 @@ class FamilyHealthApp {
                 // 计算总热量
                 const totalCalories = group.records.reduce((sum, r) => sum + (r.nutrition?.calories || 0), 0);
                 
-                // 生成食物列表（每行一个）
+                // 生成食物列表（一行显示所有）
                 const foodItems = group.records.map(r => {
-                    return `<div class="diet-food-row">
-                        <span class="food-name">${r.foodName}</span>
-                        <span class="food-qty">${r.quantity}${r.unit}</span>
-                        <span class="food-cal">${r.nutrition?.calories || 0} kcal</span>
-                    </div>`;
+                    return `<span class="diet-food-item">
+                        ${r.foodName} ${r.quantity}${r.unit} · ${r.nutrition?.calories || 0}kcal
+                    </span>`;
                 }).join('');
                 
                 mealCard.innerHTML = `
-                    <div class="meal-header" style="padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px 8px 0 0;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-weight: 600; font-size: 16px;">
-                                <i class="fas fa-utensils"></i> ${mealName}
-                            </span>
-                            <span style="font-size: 14px; opacity: 0.9;">${group.time || ''}</span>
-                        </div>
-                        <div style="margin-top: 4px; font-size: 13px; opacity: 0.85;">
-                            ${group.date} · 共 ${totalCalories} kcal
+                    <div class="meal-header" style="padding: 12px; background: #f8f9fa; border-radius: 8px 8px 0 0; border-left: 4px solid #ffc107;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i class="fas ${mealIcon}" style="color: #ffc107; font-size: 18px;"></i>
+                            <span style="font-weight: 600; font-size: 16px; color: #333;">${mealName}</span>
+                            <span style="margin-left: auto; color: #e74c3c; font-weight: 600;">${totalCalories} kcal</span>
                         </div>
                     </div>
-                    <div class="meal-foods" style="padding: 12px;">
+                    <div class="meal-foods" style="padding: 12px; display: flex; flex-wrap: wrap; gap: 12px;">
                         ${foodItems}
                     </div>
                 `;

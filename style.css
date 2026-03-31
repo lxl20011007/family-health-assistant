@@ -218,7 +218,7 @@ body {
 }
 
 .member-health-tabs .tab-btn.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #28a745;
     color: white;
 }
 
