@@ -4,7 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>家庭健康助手</title>
+
+    <!-- PWA 支持 -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="健康助手">
+    <meta name="description" content="功能完整的家庭健康管理应用，支持实时云同步">
+
+    <!-- iOS 图标 -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iNDgiIGZpbGw9IiM2NjdlZWEiLz4KPHN2ZyB4PSI0OCIgeT0iNDgiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CjxwYXRoIGQ9Im05IDE4IDMtMyAzIDMiLz4KPHBhdGggZD0iTTkgNmEzIDMgMCAwIDEgMy0zaDFhMyAzIDAgMCAxIDMgM3Y3aDFhMiAyIDAgMCAxIDIgMnYxYTIgMiAwIDAgMS0yIDJoLTEiLz4KPHBhdGggZD0iTTkgNnY4Ii8+Cjwvc3ZnPgo8L3N2Zz4=">
+
+    <!-- Windows 磁贴 -->
+    <meta name="msapplication-TileColor" content="#667eea">
+    <meta name="msapplication-TileImage" content="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQ0IiBoZWlnaHQ9IjE0NCIgdmlld0JveD0iMCAwIDE0NCAxNDQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxNDQiIGhlaWdodD0iMTQ0IiByeD0iMzYiIGZpbGw9IiM2NjdlZWEiLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI3MiIgaGVpZ2h0PSI3MiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CjxwYXRoIGQ9Im05IDE4IDMtMyAzIDMiLz4KPHBhdGggZD0iTTkgNmEzIDMgMCAwIDEgMy0zaDFhMyAzIDAgMCAxIDMgM3Y3aDFhMiAyIDAgMCAxIDIgMnYxYTIgMiAwIDAgMS0yIDJoLTEiLz4KPHBhdGggZD0iTTkgNnY4Ii8+Cjwvc3ZnPgo8L3N2Zz4=">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mobile-optimized.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -507,6 +523,15 @@
 
     <!-- JavaScript文件 -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+    <!-- 性能优化和移动端适配模块 -->
+    <script src="performance-optimizer.js"></script>
+    <script src="notification-manager.js"></script>
+    <script src="health-charts.js"></script>
+    <script src="touch-gestures.js"></script>
+    <script src="pwa-installer.js"></script>
+
+    <!-- 核心应用模块 -->
     <script src="diet-manager.js"></script>
     <script src="ai-consultation.js"></script>
     <script src="supabase-client.js"></script>
@@ -578,11 +603,20 @@
             }
         }
 
-        // 初始化应用
+        // 性能优化初始化
         document.addEventListener('DOMContentLoaded', function() {
+            // 初始化性能优化器
+            window.performanceOptimizer = new PerformanceOptimizer();
+
+            // 初始化通知管理器
+            window.notificationManager = new NotificationManager();
+
+            // 初始化图表管理器
+            window.healthCharts = new HealthCharts();
+
             // 创建应用实例
             window.app = new FamilyHealthApp();
-            console.log('应用已初始化');
+            console.log('应用已初始化，性能优化已启用');
         });
     </script>
 </body>

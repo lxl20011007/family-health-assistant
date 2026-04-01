@@ -1,0 +1,97 @@
+/**
+ * PWA Manifest 文件
+ * 定义应用的元数据和显示设置
+ */
+
+{
+    "name": "家庭健康助手",
+    "short_name": "健康助手",
+    "description": "功能完整的家庭健康管理应用，支持实时云同步",
+    "start_url": "/",
+    "display": "standalone",
+    "orientation": "portrait",
+    "theme_color": "#667eea",
+    "background_color": "#f5f7fa",
+    "categories": ["health", "medical", "lifestyle"],
+    "lang": "zh-CN",
+    "dir": "ltr",
+
+    "icons": [
+        {
+            "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iMTIiIGZpbGw9IiM2NjdlZWEiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CjxwYXRoIGQ9Im05IDE4IDMtMyAzIDMiLz4KPHBhdGggZD0iTTkgNmEzIDMgMCAwIDEgMy0zaDFhMyAzIDAgMCAxIDMgM3Y3aDFhMiAyIDAgMCAxIDIgMnYxYTIgMiAwIDAgMS0yIDJoLTEiLz4KPHBhdGggZD0iTTkgNnY4Ii8+Cjwvc3ZnPgo8L3N2Zz4K",
+            "sizes": "48x48",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        },
+        {
+            "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iNDgiIGZpbGw9IiM2NjdlZWEiLz4KPHN2ZyB4PSI0OCIgeT0iNDgiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CjxwYXRoIGQ9Im05IDE4IDMtMyAzIDMiLz4KPHBhdGggZD0iTTkgNmEzIDMgMCAwIDEgMy0zaDFhMyAzIDAgMCAxIDMgM3Y3aDFhMiAyIDAgMCAxIDIgMnYxYTIgMiAwIDAgMS0yIDJoLTEiLz4KPHBhdGggZD0iTTkgNnY4Ii8+Cjwvc3ZnPgo8L3N2Zz4K",
+            "sizes": "192x192",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiByeD0iMTI4IiBmaWxsPSIjNjY3ZWVhIi8+CjxzdmcgeD0iMTI4IiB5PSIxMjgiIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPHBhdGggZD0ibTkgMTggMy0zIDMgMyIvPgo8cGF0aCBkPSJNOSA2YTMgMyAwIDAgMSAzLTNoMWEzIDMgMCAwIDEgMyAzdjdIMWEyIDIgMCAwIDEgMiAydjFhMiAyIDAgMCAtMiAyaC0xIi8+CjxwYXRoIGQ9Ik05IDZ2OCIvPgo8L3N2Zz4KPHN2Zz4K",
+            "sizes": "512x512",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ],
+
+    "shortcuts": [
+        {
+            "name": "添加健康记录",
+            "short_name": "健康记录",
+            "description": "快速添加健康指标记录",
+            "url": "/?action=add-health",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iMTIiIGZpbGw9IiM2NjdlZWEiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CjxwYXRoIGQ9Im05IDE4IDMtMyAzIDMiLz4KPHBhdGggZD0iTTkgNmEzIDMgMCAwIDEgMy0zaDFhMyAzIDAgMCAxIDMgM3Y3aDFhMiAyIDAgMCAxIDIgMnYxYTIgMiAwIDAgMS0yIDJoLTEiLz4KPHBhdGggZD0iTTkgNnY4Ii8+Cjwvc3ZnPgo8L3N2Zz4K",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "饮食管理",
+            "short_name": "饮食",
+            "description": "记录和管理日常饮食",
+            "url": "/?action=diet",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iMTIiIGZpbGw9IiM0Q0FGNTA0Ii8+CjxzdmcgeD0iMTIiIH5PSIxMiIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPHBhdGggZD0iTTMgMmgzdjE2SDMiLz4KPHBhdGggZD0iTTkgNGgxMmwtMSAxMEg5eiIvPgo8cGF0aCBkPSJNMTEgMTZoNHY2aC00eiIvPgo8L3N2Zz4KPHN2Zz4K",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "AI 问诊",
+            "short_name": "问诊",
+            "description": "使用AI助手进行健康咨询",
+            "url": "/?action=ai-consultation",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iMTIiIGZpbGw9IiNGRjYzODQiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjMiLz4KPHBhdGggZD0iTTE5LjQgMTVhMS42NSAxLjY1IDAgMCAwIC4zMy0xLjgyIDEwIDEwIDAgMSAwLTE3LjM2IDBoMGExLjY1IDEuNjUgMCAwIDAgLjMzIDEuODIiLz4KPHBhdGggZD0iTTEyIDF2NCIvPgo8cGF0aCBkPSJNMTIgMTl2NCIvPgo8cGF0aCBkPSJtNC45MyA0LjkzIDEuNDEgMS40MSIvPgo8cGF0aCBkPSJtMTYuMjQgMTYuMjQgMS40MSAxLjQxIi8+CjxwYXRoIGQ9Im0xIDEydjRoNCIvPgo8cGF0aCBkPSJtMjMgMTJ2NGgtNCIvPgo8L3N2Zz4KPHN2Zz4K",
+                    "sizes": "96x96"
+                }
+            ]
+        }
+    ],
+
+    "screenshots": [
+        {
+            "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjYwMCIgdmlld0JveD0iMCAwIDQwMCA2MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iNjAwIiBmaWxsPSIjZjVmN2ZhIi8+CjxyZWN0IHg9IjIwIiB5PSI0MCIgd2lkdGg9IjM2MCIgaGVpZ2h0PSI4MCIgcng9IjE2IiBmaWxsPSIjNjY3ZWVhIi8+Cjx0ZXh0IHg9IjIwMCIgeT0iODAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPuiHquWumuS5kOSjqOWIhueroO+8mjY2N2VlYTwvdGV4dD4KPHJlY3QgeD0iMjAiIHk9IjE0MCIgd2lkdGg9IjE3MCIgaGVpZ2h0PSIxMDAiIHJ4PSIxMCIgZmlsbD0id2hpdGUiIHN0cm9rZT0iI2U5ZWNlZiIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxyZWN0IHg9IjIxMCIgeT0iMTQwIiB3aWR0aD0iMTcwIiBoZWlnaHQ9IjEwMCIgcng9IjEwIiBmaWxsPSJ3aGl0ZSIgc3Ryb2tlPSIjZTllY2VmIiBzdHJva2Utd2lkdGg9IjIiLz4KPHJlY3QgeD0iMjAiIHk9IjI2MCIgd2lkdGg9IjM2MCIgaGVpZ2h0PSIzMDAiIHJ4PSIxMCIgZmlsbD0id2hpdGUiIHN0cm9rZT0iI2U5ZWNlZiIgc3Ryb2tlLXdpZHRoPSIyIi8+Cjwvc3ZnPgo=",
+            "sizes": "400x600",
+            "type": "image/svg+xml",
+            "form_factor": "narrow"
+        },
+        {
+            "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgdmlld0JveD0iMCAwIDYwMCA0MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI2MDAiIGhlaWdodD0iNDAwIiBmaWxsPSIjZjVmN2ZhIi8+CjxyZWN0IHg9IjIwIiB5PSIyMCIgd2lkdGg9IjU2MCIgaGVpZ2h0PSI2MCIgcng9IjEyIiBmaWxsPSIjNjY3ZWVhIi8+Cjx0ZXh0IHg9IjMwMCIgeT0iNTUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPuiHquWumuS5kOSjqOWIhueroO+8mjY2N2VlYTwvdGV4dD4KPHJlY3QgeD0iMjAiIHk9IjEwMCIgd2lkdGg9IjI3MCIgaGVpZ2h0PSIyNTAiIHJ4PSIxMCIgZmlsbD0id2hpdGUiIHN0cm9rZT0iI2U5ZWNlZiIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxyZWN0IHg9IjMxMCIgeT0iMTAwIiB3aWR0aD0iMjcwIiBoZWlnaHQ9IjI0MCIgcng9IjEwIiBmaWxsPSJ3aGl0ZSIgc3Ryb2tlPSIjZTllY2VmIiBzdHJva2Utd2lkdGg9IjIiLz4KPC9zdmc+Cg==",
+            "sizes": "600x400",
+            "type": "image/svg+xml",
+            "form_factor": "wide"
+        }
+    ],
+
+    "related_applications": [],
+
+    "prefer_related_applications": false
+}
